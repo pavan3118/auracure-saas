@@ -1,0 +1,92 @@
+> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
+> Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+
+# API specification
+
+## Contract status
+
+**Approved:** `POST /api/v1/onboarding/register`, its transaction and protections, JWT tenant scope and the six business roles. All other contracts here are **ASSUMPTION - needs approval (A07)**, with related behavior inherited from PRD assumptions. Paths below are relative to `/api/v1`; no endpoint below has been implemented.
+
+## Conventions — ASSUMPTION - needs approval (A07)
+
+JSON success: `{ "data": ..., "meta": { "request_id": "..." } }`. Errors: `{ "error": { "code": "...", "message": "...", "fields": [] }, "meta": { "request_id": "..." } }`. Never include stack traces, tokens or patient details in errors/logs. Validate with Zod and reject unknown writable fields, including tenant_id.
+
+Use ISO 8601 UTC timestamps, opaque cursor pagination (`cursor`, `limit`, proposed maximum 100), allowlisted sorting, integer minor monetary units and explicit currency. Create returns 201, successful reads/commands 200, empty deletion/revocation 204. 400 validation, 401 missing/invalid authentication, 403 role/scope denial, 404 inaccessible resource, 409 version/state/uniqueness conflict, 429 rate limit, 503 missing provider configuration.
+
+Proposed error codes: VALIDATION_ERROR, AUTH_REQUIRED, AUTH_INVALID, FORBIDDEN, NOT_FOUND, CONFLICT, SUBDOMAIN_UNAVAILABLE, CONTACT_UNVERIFIED, CHALLENGE_INVALID, MFA_REQUIRED, CREDENTIAL_CHANGE_REQUIRED, LICENCE_UNVERIFIED, INSUFFICIENT_STOCK, INSUFFICIENT_CREDIT, PRICING_NOT_CONFIGURED, PROVIDER_UNAVAILABLE, RATE_LIMITED. Do not expose whether an account exists through recovery responses.
+
+## Onboarding and authentication — ASSUMPTION - needs approval (A01, A04, A05, A20)
+
+| Method/path | Access | Proposed payload / response |
+| --- | --- | --- |
+| POST /onboarding/contact-challenges | Public exception proposed | contact, desired_subdomain → generic acknowledgement + opaque challenge handle; delivery out of band |
+| POST /onboarding/contact-challenges/verify | Public exception proposed | challenge handle, proof → short-lived verified registration grant |
+| POST /onboarding/register | **Approved public exception** | facility{name,type,subdomain,capacity}, owner{name,email,password}, verification_grant → owner summary + tenant summary + MFA-enrollment JWT |
+| POST /auth/login | Public exception proposed | facility_subdomain, login, password or portal_pin → limited MFA/credential-change challenge or authenticated session |
+| POST /auth/otp-requests | Public exception proposed | facility_subdomain, contact → generic acknowledgement; WhatsApp OTP link sent out of band |
+| POST /auth/otp-exchange | Public exception proposed | single-use opaque code → tenant-bound PATIENT session |
+| POST /auth/mfa/enroll | Enrollment JWT only | begin TOTP enrollment; returns secret/URI once over TLS; Cache-Control no-store |
+| POST /auth/mfa/confirm | Enrollment JWT only | TOTP proof → activated MFA + full session |
+| POST /auth/mfa/verify | Login challenge JWT only | TOTP or recovery code → full session |
+| POST /auth/password/change | Credential-change JWT or full session | current proof, new password → rotate/revoke session credentials |
+| POST /auth/invitations/accept | Public exception proposed | single-use invitation, new password → limited/full session per role activation requirements |
+| POST /auth/refresh | Refresh-cookie proof; proposed exception | rotate cookie and session; tenant scope comes from verified stored session |
+| POST /auth/logout | Authenticated or refresh-session proof | revoke session, clear cookie |
+| POST /auth/recovery/request | Public exception proposed | facility_subdomain, login → generic response |
+| POST /auth/recovery/complete | Public exception proposed | single-use recovery token, new credential → reset; does not bypass MFA |
+
+Only registration is already authorized as a public exception. The additional exception routes above require approval. Login subdomain selects a candidate tenant but is never trusted authorization; successful credential verification creates the tenant-bound signed context. Recovery/invitation grants are server-issued, purpose-bound and tenant-bound. Enrollment/challenge tokens cannot call ordinary resource endpoints.
+
+Registration uses `Idempotency-Key`; identical retries return the same outcome without creating another tenant, but must not replay raw tokens from an insecure persistent cache. A timed-out successful registration resumes through authentication, not repeated credential issuance. Exact resume UX is A01/A04. Unique indexes resolve registration races with 409; rate limits also apply to failed requests.
+
+## Resource endpoints — ASSUMPTION - needs approval (A02, A03, A07, A10–A16)
+
+All rows below require a verified full session and the permission matrix in Authentication & Security.md. Request schemas must be finalized before code; the named payload concepts below are not approval of unspecified clinical fields.
+
+| Resource | Proposed endpoints | Payload / access boundaries |
+| --- | --- | --- |
+| Session | GET /me | current user, role, tenant and allowed capability summary |
+| Staff | GET/POST /staff/invitations; GET /staff; PATCH /staff/:id | invite{role,login}; changes{role?,status?}; OWNER full management; constrained pharmacist/lab invitation proposals |
+| Licence | POST /staff/:id/licence-verification | OWNER records evidence reference/status; never a self-verification |
+| Patients | GET/POST /patients; GET/PATCH /patients/:id | approved demographic schema; reception writes; clinical reads only where necessary |
+| Vitals | GET/POST /visits/:id/vitals | observations[{code,value,unit}]; reception records, doctor reads |
+| Visits | POST /visits; GET /queue; POST /queue/claim-next | patient_id and approved visit metadata; claim assigns authenticated doctor atomically |
+| Completion | POST /visits/:id/complete | expected_version; assigned doctor; one billable completion event |
+| Cancellation | POST /visits/:id/cancel | expected_version, reason; reception/owner before completion |
+| Prescriptions | POST /visits/:id/prescriptions; GET/PATCH /prescriptions/:id | approved items/notes, expected_version; assigned doctor writes |
+| Prescription lease | POST /prescriptions/:id/lease; POST /prescriptions/:id/lease/renew | expected_version; current editor; 409 if another active lease |
+| Signing | POST /prescriptions/:id/sign | expected_version, reauthentication proof; explicit immutable revision |
+| Stock | GET/POST /stock/batches; PATCH /stock/batches/:id | item_id,batch_no,expiry,quantity,unit; approved pharmacy permissions |
+| Dispensing | POST /prescriptions/:id/dispenses | allocations + optional doctor-approved substitution reference |
+| Lab | POST /lab/orders; GET /lab/orders; PATCH /lab/orders/:id | approved tests and allowed state transition; doctor orders, LAB processes |
+| Results | POST /lab/orders/:id/results; POST /lab/results/:id/sign | approved result schema; sign-off PIN proof; never log proof |
+| Verification/release | POST /lab/results/:id/verify; POST /lab/results/:id/release | doctor verifies; LAB releases only verified revision |
+| Invoices | GET/POST /invoices; GET /invoices/:id; POST /invoices/:id/issue; POST /invoices/:id/void | approved item amounts, version, void reason; roles per matrix |
+| Payments | POST /invoices/:id/payments | amount_minor,currency,method; prevents overpayment unless approved |
+| Cash | POST /cash/sessions; POST /cash/sessions/:id/close; POST /cash/sessions/:id/review | opening float; counted amount/reason; owner review |
+| Portal | GET /portal/me; GET /portal/visits; GET /portal/prescriptions; GET /portal/lab-results; GET /portal/invoices | PATIENT own linked records only; signed/released filters |
+| PDFs | POST /documents/:id/download-grant | authorize tenant, patient and release state; short-lived private download grant |
+| Usage | GET /billing/usage; GET /billing/platform-bills | OWNER only; separate from patient invoices |
+| Audit | GET /audit-events | OWNER operational audit; no raw clinical payloads |
+
+Mutating commands involving creation, completion, dispensing, payments, cash close and provider charges require an `Idempotency-Key` bound to actor, tenant, operation and request hash. Reuse with different payload returns 409. Proposed retention 24 hours is **ASSUMPTION - needs approval (A07)**; durable domain/provider unique keys remain authoritative after expiry.
+
+## Integrations and live events — ASSUMPTION - needs approval (A18, A19)
+
+`POST /webhooks/messaging/:provider` and `POST /webhooks/billing/:provider` are proposed authenticated-provider exceptions: verify signatures over raw bodies, timestamp tolerance and replay IDs; map tenant from stored provider references, never an unsigned tenant parameter. Ignore unknown references safely. These exceptions also require approval.
+
+Socket.io connections verify full JWTs, tenant scope and role; disconnect at session expiry/revocation. Proposed `queue.updated` event contains a minimal visit identifier and state/version, not patient demographics; clients refetch authorized data. No client-selected tenant rooms. GET /health/live is a proposed public operational exception returning no secrets; GET /health/ready is deployment-internal and checks dependencies without patient data. Internal SYSTEM_ADMIN APIs remain unexposed until separately specified (A06).
+
+## Phase 1 implemented contract and scope
+
+Implemented: contact challenge request/verification; registration; login; MFA enrollment/confirmation/verification; refresh/logout; password change; recovery request/completion; invitation acceptance; development-only patient OTP request/exchange; me; staff listing/invitations/approval/update/licence verification; sanitized audit listing; liveness/readiness. Every clinical, billing, cash, PDF, Socket.io and operator endpoint above remains planned and returns 404.
+
+Exact onboarding request keys: contact challenge `{email, desired_subdomain}`, verify `{challenge_id, proof}`, registration `{facility:{name,type,subdomain,capacity},owner:{name,email,password},verification_grant}` plus an Idempotency-Key header (16–128 characters). Registration replay records are bound to the verified contact grant and retained with that 15-minute bootstrap record; after MFA completion or grant expiry, sign in rather than expecting a cached session. Raw session tokens are never cached in the database. Concurrent identical retries return one tenant/owner; a changed payload using the same key returns 409.
+
+Login accepts exactly one of password or portal_pin, together with facility_subdomain and login. Recovery completion uses new_password for a staff password or a patient four-digit PIN; the service enforces the account's credential type. Invitation acceptance adds optional signoff_pin, required as six digits for LAB. Doctors choose their permanent password during invite acceptance; temporary-password accounts remain restricted until password change.
+
+`POST /staff/invitations/:id/approve` implements OWNER approval of a pharmacy/lab invitation request. `PATCH /staff/:id` adds mfa_proof to role/status; licence verification requires `{evidence_ref,mfa_proof}`. Invitations use email logins in Phase 1; alternate employee/mobile/licence login formats remain future extensions. Staff, invitations and audit lists return at most 100 rows, newest first; cursor pagination is not yet implemented.
+
+Cookie-authenticated refresh requires an exact matching Origin header. Browser cookie is HttpOnly, SameSite=Lax, auth-path scoped and Secure in production; local HTTP development omits Secure intentionally. Access JWTs stay in browser memory and expire after 15 minutes; the client attempts renewal after 14 minutes. Health responses contain status only; deployment must restrict readiness at its ingress.
