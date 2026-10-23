@@ -1,6 +1,6 @@
 # Phase 1 review handoff
 
-Phase 1 is implemented and validated locally. **Atlas-backed validation and the requested CodeRabbit review are blocked, so the full Phase 1 handoff is not signed off.** No Phase 2 clinical/reception feature has been started. This document records the original local validation checkpoint. Git history and the remote record subsequent commits/pushes; no PR, deployment or environment publication is claimed here.
+Phase 1 is implemented and validated locally. The user reports Atlas verified on their own machine and authorizes cloud development/tests without Atlas. **The requested CodeRabbit review remains blocked; no external review sign-off is claimed.** No Phase 2 clinical/reception feature has been started. This document records the original local validation checkpoint. Git history and the remote record subsequent commits/pushes; no PR, deployment or environment publication is claimed here.
 
 ## Delivered behavior and traceability
 
@@ -77,3 +77,11 @@ The forced-resolver SRV probe still failed with `ECONNREFUSED querySrv`. A stand
 The standard connection failed with MongooseServerSelectionError; every seed reported MongoNetworkError with EAI_AGAIN during hostname resolution, including the approved retry outside the filesystem sandbox. Authentication, seed validity, Atlas network access and transaction support remain unverified. The cloud checks do not test the user's separate terminal. Atlas console access is unavailable here; no Atlas IP access rule was changed. Opening all IPs does not solve DNS discovery.
 
 Post-change server build, lint, formatting and all **49 server tests** passed. Existing UI/browser results above are from the preceding Phase 1 validation; these suites were not rerun for this server-only DNS change. The CodeRabbit installer domain addition is saved as a draft only; review/save the environment settings, then publish when ready. No publication or networking activation is claimed.
+
+## User-authorized Atlas-independent Phase 1 continuation
+
+The user reports Atlas working from their own terminal and authorized continuing Phase 1 with mongodb-memory-server. Atlas connectivity is no longer a blocker to this local development workflow; external CodeRabbit review is still outstanding. There is no independent cloud Atlas validation claim.
+
+Added root/server db:ping scripts, a private ignored server/.env using existing credentials, credential-redacted error reporting, and the default disposable memory-server replica-set test runner. The latest ping still reports getaddrinfo EAI_AGAIN for the three user-supplied seed hosts. The broader *.mongodb.net rule was saved to the environment draft as requested; no restart, publication, port change or Atlas IP access-list modification occurred.
+
+Fallback verification: 9 UI tests and 49 server tests passed with the memory-server-managed local replica set. The same transaction, permission and cross-tenant cases ran; no assertions were disabled or MongoDB operations mocked. The MongoDB executable comes from the existing digest-pinned trusted Docker image and is reused locally; no Atlas request is needed for tests. Later phases still require NEXT PHASE.

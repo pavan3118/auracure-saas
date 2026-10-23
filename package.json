@@ -14,14 +14,16 @@
     "dev": "tsx scripts/dev.ts",
     "build": "npm run build --workspaces",
     "lint": "eslint scripts e2e playwright.config.ts && npm run lint --workspaces",
-    "test": "tsx scripts/local-db.ts && npm run test --workspaces",
+    "test": "tsx scripts/test.ts",
     "db:indexes": "tsx scripts/with-env.ts db:indexes",
     "format:check": "prettier --check client/src server/src scripts e2e",
     "setup:local": "tsx scripts/setup-local.ts",
     "dev:atlas": "tsx scripts/dev.ts --atlas",
     "db:local": "tsx scripts/local-db.ts",
     "test:e2e": "playwright test",
-    "check:atlas": "tsx scripts/check-atlas.ts"
+    "check:atlas": "tsx scripts/check-atlas.ts",
+    "db:ping": "npm run db:ping -w server",
+    "setup:test-db": "tsx scripts/test-db.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",
@@ -29,6 +31,7 @@
     "dotenv": "17.2.3",
     "eslint": "9.39.1",
     "globals": "16.5.0",
+    "mongodb-memory-server": "11.3.0",
     "mongoose": "8.24.7",
     "otpauth": "9.4.1",
     "prettier": "3.7.4",
@@ -36,5 +39,10 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.48.1"
   },
-  "type": "module"
+  "type": "module",
+  "config": {
+    "mongodbMemoryServer": {
+      "disablePostinstall": true
+    }
+  }
 }

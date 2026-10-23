@@ -56,3 +56,7 @@ Only the nine Markdown drafts and their references/assumption labels are checked
 ## Phase 1 evidence
 
 See PHASE1-REVIEW.md for executed commands/counts. Server tests run against a real MongoDB replica set with an isolated auracare_test_* database and drop only that database. Browser testing exercises both the real API and UI with synthetic contacts, owner MFA and a separate doctor browser context. Integration tests deliberately bypass providers with an injected mailbox; external SMTP/WhatsApp/Atlas behavior remains unverified.
+
+## Default test runner update
+
+The user authorized an Atlas-independent fallback. Root npm test now provisions a mongodb-memory-server replica set and injects its local URI into the suites. It exercises the same real transaction/index/concurrency behavior, with no Atlas connection. The earlier standalone Docker replica-set results remain historical evidence; the fallback run passed 9 UI and 49 server tests.
