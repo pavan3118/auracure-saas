@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> **Specification baseline approved by the user; Phase 4 implementation is under review.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Authentication & Security
 
@@ -99,3 +99,11 @@ Only an assigned DOCTOR can manage an active encounter, prescribe, order tests/s
 Signing and post-completion amendments require the doctor's current password. The transaction checks that credential version, password hash, status and DOCTOR role still match before writing. Only failed password proofs consume the five-failure / 15-minute reauthentication counter, and failures are audited. Password proofs are not stored in idempotency hashes, audit events or clinical content hashes. Signed prescriptions cannot be modified/discarded; corrections produce a linked new draft, and finalized notes accept separate immutable amendments.
 
 PHARMACIST may read a signed prescription projection; PATIENT must additionally match the linked patient user ID. Draft/discarded revisions and unrelated same-tenant patients remain inaccessible. LAB order projections contain requested tests/instructions only, not complaint/assessment/plan. Clinical bodies and passwords never appear in live queue notices.
+
+## Phase 4 permission and proof controls
+
+OWNER sees operational invoices, stock and shift summaries and may void unpaid invoices/review closes with fresh MFA, but receives no lab or prescription clinical access. RECEPTIONIST records invoices/receipts and closes only their own shift. PHARMACIST requires current VERIFIED licence for receiving, adjusting, requesting substitutions and dispensing. LAB drafts/signs/releases lab results; only the requesting DOCTOR can verify and approve their own prescription alternatives. PATIENT reads their own issued invoice/receipts and only their current released lab revision. OWNER is never a clinical bypass.
+
+LAB sign-off uses the existing separate peppered/bcrypt six-digit diagnostic PIN; doctor verification/substitution approval checks the current password. Five failed sensitive password/PIN proofs per user/kind per 15 minutes are enforced in shared Mongo rate storage; successful proofs do not consume the failure budget. Credential hashes/versions are rechecked and locked inside transactions. Owner financial proof routes allow ten attempts per 15 minutes and consume existing replay-protected TOTP/recovery proofs. No credential enters retry fingerprints, clinical records or audit values.
+
+Issued invoice lines, payment/movement records, dispensing allocations and signed result content are immutable through the APIs. Corrections retain original results but require the full sign/verify/release sequence again. Starting a correction withholds the previous patient release until the replacement is released. Existing draft leases and tenant/session revocation controls remain in effect. Audit events contain resource IDs/actions, not observations, card details or credentials. Noncash receipt references identify an existing transaction; never store card PAN/CVV.

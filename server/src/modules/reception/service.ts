@@ -1,9 +1,10 @@
+import { cashView } from "../billing/cash-view.js";
 import { randomInt } from "node:crypto";
 import type { FilterQuery } from "mongoose";
 import { digest } from "../../crypto.js";
 import type { Identity } from "../../auth.js";
 import { check, type Principal } from "../../types.js";
-import type { Patient, Visit } from "./models.js";
+import type { Patient, Visit, CashSession } from "./models.js";
 import type { PatientInput, PatientPatch, VitalsInput } from "./contracts.js";
 import { Operations } from "./operations.js";
 import { minorAmount } from "./money.js";
@@ -541,23 +542,8 @@ export class Reception {
     check(entry, 404, "NOT_FOUND");
     return this.cashView(entry);
   }
-  private cashView(c: {
-    _id: string;
-    receptionistId: string;
-    openingFloatMinor: number;
-    currency: string;
-    openedAt: Date;
-    state: string;
-  }) {
-    return {
-      id: c._id,
-      receptionist_id: c.receptionistId,
-      opening_float_minor: c.openingFloatMinor,
-      currency: c.currency,
-      state: c.state,
-      opened_at: c.openedAt,
-      reconciliation_available: false,
-    };
+  private cashView(c: CashSession) {
+    return cashView(c);
   }
   async cash(p: Principal) {
     this.authorize(p, "RECEPTIONIST", "OWNER");

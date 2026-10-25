@@ -1,3 +1,4 @@
+import { operationsRoutes } from "./modules/operations/routes.js";
 import { doctorRoutes } from "./modules/doctor/routes.js";
 import { receptionRoutes } from "./modules/reception/routes.js";
 import type { QueuePublisher } from "./modules/reception/service.js";
@@ -616,6 +617,7 @@ export async function createApp(identity: Identity, publish?: QueuePublisher) {
     }),
   );
   receptionRoutes(app, identity, { guard, route, data, ctx }, publish);
+  operationsRoutes(app, identity, { guard, route, data, ctx });
   doctorRoutes(app, identity, { guard, route, data, ctx }, publish);
   app.use((_req, _res, next) => next(new AppError(404, "NOT_FOUND")));
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

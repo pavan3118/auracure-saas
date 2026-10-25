@@ -345,6 +345,12 @@ export class Doctor {
       async (s) => {
         await this.touch(p, visitId, s);
         check(
+          !(await this.db.dispenses(p.tenantId).findOne({ visitId }, s)),
+          409,
+          "ALREADY_DISPENSED",
+          "Dispensed encounters need a new encounter for new prescribing.",
+        );
+        check(
           !(await this.db
             .prescriptions(p.tenantId)
             .findOne({ visitId, state: "DRAFT" }, s)),

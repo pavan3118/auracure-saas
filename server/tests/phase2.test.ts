@@ -569,7 +569,7 @@ describe("vitals validation, privacy and lifecycle", () => {
       .expect(409);
   });
 });
-describe("opening cash floats and financial deferral", () => {
+describe("opening cash floats and Phase 4 compatibility", () => {
   it("records exact INR minor units and deduplicates opening requests", async () => {
     const k = key(),
       input = { opening_float: "1000.29", currency: "INR" };
@@ -585,7 +585,7 @@ describe("opening cash floats and financial deferral", () => {
     expect(r.map((v) => v.status)).toEqual([201, 201]);
     expect(r[0]!.body.data.opening_float_minor).toBe(100029);
     expect(r[0]!.body.data.id).toBe(r[1]!.body.data.id);
-    expect(r[0]!.body.data.reconciliation_available).toBe(false);
+    expect(r[0]!.body.data.reconciliation_available).toBe(true);
     await request(app)
       .post("/api/v1/cash/sessions")
       .auth(bearer("RECEPTIONIST"), { type: "bearer" })
@@ -607,7 +607,7 @@ describe("opening cash floats and financial deferral", () => {
         .send(input)
         .expect(400);
   });
-  it("scopes shifts to receptionist and tenant and has no premature close endpoint", async () => {
+  it("scopes shifts to receptionist and tenant and requires a validated close payload", async () => {
     const beta = await request(app)
       .get("/api/v1/cash/sessions")
       .auth(bearer("OWNER", "beta"), { type: "bearer" })
@@ -622,7 +622,7 @@ describe("opening cash floats and financial deferral", () => {
       .post(`/api/v1/cash/sessions/${alpha.body.data[0].id}/close`)
       .auth(bearer("RECEPTIONIST"), { type: "bearer" })
       .send({})
-      .expect(404);
+      .expect(400);
   });
   it("keeps patient payloads out of retry ledgers and audit events", async () => {
     const records = await db.operations("alpha").find();

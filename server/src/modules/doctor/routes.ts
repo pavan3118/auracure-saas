@@ -229,14 +229,6 @@ export function doctorRoutes(
       ),
     ),
   );
-  app.get(
-    "/api/v1/lab/orders",
-    guard(["access"], ["DOCTOR", "LAB"]),
-    route(async (req, res) => {
-      empty.parse(req.query);
-      data(res, await d.labs(ctx(res).p));
-    }),
-  );
   app.post(
     "/api/v1/visits/:id/service-orders",
     doctor(),

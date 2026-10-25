@@ -1517,3 +1517,34 @@ td small {
     gap: 10px;
   }
 }
+.cash-record {
+  flex-wrap: wrap;
+}
+.cash-record > div:last-child {
+  flex-basis: 100%;
+  min-width: 0;
+}
+.operations-panel {
+  margin-bottom: 24px;
+  overflow-wrap: anywhere;
+}
+.operations-panel > .button {
+  margin: 4px;
+  white-space: normal;
+  text-align: left;
+}
+.operations-panel article + article {
+  border-top: 1px solid #dce5e8;
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.operations-panel form {
+  max-width: 600px;
+  margin: 20px 0;
+}
+.operations-panel fieldset fieldset {
+  border: 1px solid #dce5e8;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+}

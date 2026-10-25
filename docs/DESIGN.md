@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> **Specification baseline approved by the user; Phase 4 implementation is under review.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Design specification
 
@@ -38,3 +38,9 @@ Patient views are mobile-first; proposed breakpoints are 640/1024px, with deskto
 ## Design review needed — ASSUMPTION - needs approval (A09)
 
 Approve token palette, brand assets, screen wireframes, patient identity/recovery UX, clinical field layouts and role-specific projections before treating screenshots as acceptance evidence. No mockup or design asset has been generated or approved in this draft.
+
+## Phase 4 workspace delivery
+
+Verified PHARMACIST accounts land on Stock & dispensing with batch receipt, reasoned adjustments, exact prescription lines, FEFO full fulfillment and retained allocation snapshots. Generic requests show original and alternative product labels; doctors explicitly approve with their current password. LAB lands on Samples & results with collection, manual analytes, draft editing, PIN sign-off, attributed revision history and verified-result release. DOCTOR navigation adds laboratory verification and generic approvals.
+
+OWNER/RECEPTIONIST navigation adds invoices and receipts. Patient search feeds the invoice chooser; multi-line drafts display explicit prices/taxes and can be edited before issuance. Receipt forms distinguish cash from manually recorded noncash references. Reception cash shows expected/count/variance and offers own-shift close; owners review CLOSED records with fresh MFA. Server errors remain visible without success claims; state transitions refetch authorized projections. No portal result UI is delivered before Phase 5.

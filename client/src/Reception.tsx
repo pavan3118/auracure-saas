@@ -634,9 +634,8 @@ export function Reception() {
               <span className="badge">INR</span>
             </div>
             <p>
-              Record the cash available at the start of your shift. Payment
-              collection and final reconciliation become available with
-              invoicing in Phase 4.
+              Record the opening float, then reconcile recorded cash receipts at
+              shift close.
             </p>
             {receptionist && !cash.some((c) => c.state === "OPEN") && (
               <Form
@@ -671,7 +670,66 @@ export function Reception() {
                       <strong>{inr(c.opening_float_minor)}</strong>
                       <small>{new Date(c.opened_at).toLocaleString()}</small>
                     </div>
-                    <span className="badge good">Open shift</span>
+                    <span className="badge good">
+                      {c.state === "OPEN" ? "Open shift" : c.state}
+                    </span>
+                    <div>
+                      <p>Expected cash: {inr(c.expected_cash_minor)}</p>
+                      {c.counted_cash_minor !== null && (
+                        <p>
+                          Counted: {inr(c.counted_cash_minor)} · Variance:{" "}
+                          {inr(c.variance_minor ?? 0)} · {c.variance_reason}
+                        </p>
+                      )}
+                      {receptionist && c.state === "OPEN" && (
+                        <Form
+                          submit="Close cash shift"
+                          onSubmit={async (d) => {
+                            await mutate(
+                              `cash-close-${c.id}`,
+                              `/cash/sessions/${c.id}/close`,
+                              {
+                                expected_version: c.version,
+                                counted_cash: value(d, "counted"),
+                                variance_reason: value(d, "reason"),
+                              },
+                            );
+                            await readCash();
+                          }}
+                        >
+                          <Field label="Counted cash (₹)" name="counted" />
+                          <Field
+                            label="Variance reason (required if cash differs)"
+                            name="reason"
+                            required={false}
+                          />
+                        </Form>
+                      )}
+                      {owner && c.state === "CLOSED" && (
+                        <Form
+                          submit="Review cash close"
+                          onSubmit={async (d) => {
+                            await mutate(
+                              `cash-review-${c.id}`,
+                              `/cash/sessions/${c.id}/review`,
+                              {
+                                expected_version: c.version,
+                                review_note: value(d, "note"),
+                                mfa_proof: value(d, "proof"),
+                              },
+                            );
+                            await readCash();
+                          }}
+                        >
+                          <Field label="Owner review note" name="note" />
+                          <Field
+                            label="Fresh authenticator or recovery code"
+                            name="proof"
+                          />
+                        </Form>
+                      )}
+                      {c.review_note && <p>Owner review: {c.review_note}</p>}
+                    </div>
                   </article>
                 ))}
               </div>
@@ -679,9 +737,8 @@ export function Reception() {
               <p className="empty-state">No opening float has been recorded.</p>
             )}
             <div className="info-box">
-              Closing the shift, reviewing cash variances, and reconciling
-              payments are deferred until the invoice/payment ledger is
-              implemented. No close or collection action is enabled.
+              Expected cash equals opening float plus recorded cash receipts.
+              Explain any variance; the owner reviews closed shifts.
             </div>
           </section>
         </>

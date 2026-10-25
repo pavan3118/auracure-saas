@@ -161,9 +161,9 @@ test("reception registration, check-in, live owner queue, vitals, opening float 
     page.getByText("Opening float recorded.", { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("₹1,500.25", { exact: true })).toBeVisible();
-  expect(await page.getByRole("button", { name: "Close shift" }).count()).toBe(
-    0,
-  );
+  await expect(
+    page.getByRole("button", { name: "Close cash shift" }),
+  ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({
     path: ".local/phase2-cash-mobile.png",

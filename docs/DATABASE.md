@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> **Specification baseline approved by the user; Phase 4 implementation is under review.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Database specification
 
@@ -73,3 +73,20 @@ Vitals records store the exact approved observation codes/units, visit/patient I
 New tenant-scoped collections: ConsultationNote (unique tenant/visit, versioned DRAFT → FINAL); NoteAmendment (append-only correction fields/reason/actor and unique operation reference); Prescription (unique tenant/visit/revision, one DRAFT per encounter, session-bound lease, signed content hash/time/actor or retained DISCARDED state); LabOrder and ServiceOrder (ORDERED only, durable operation keys); UsageEvent (unique tenant/meter/sourceId, quantity=1 encounter for completion). Visits add claimedAt/completedAt, claimKey and completion key/request fingerprint, plus a partial unique tenant/doctor index for IN_CONSULTATION.
 
 Unsigned draft edits/sign/discard, note saves, order creation and completion serialize through the visit version. Clinical finalization and usage insertion are atomic. Signed revisions and finalized notes are immutable through exposed services; corrections append new records. No password or password-derived proof is copied into retry/audit records. Apply additive indexes before Phase 3 traffic.
+
+## Phase 4 concrete schema additions
+
+All new collections require tenant_id and use scoped repositories. Actual code uses camelCase document fields with snake_case HTTP projections. Database.indexes creates additive indexes before accepting traffic; no existing records are removed.
+
+| Model | Immutable or guarded content | Principal constraints |
+| --- | --- | --- |
+| Invoice | patient, manual lines, integer subtotal/tax/total, paid balance, state, version, issued number/time | unique tenant + operationKey; partial unique tenant + nonempty number; draft-only content changes |
+| Payment | invoice/patient/actor, amountMinor, CASH/UPI/CARD, external reference, cashSessionId | unique tenant + operationKey; unique tenant + method + nonempty external reference |
+| CashMovement | cashSessionId, paymentId, actorId, amountMinor, RECEIPT | unique tenant + paymentId; appended atomically with receipt |
+| StockBatch | exact product label/key, batch number, expiry date, quantity/version | unique tenant + productKey + batchNumber; FEFO index; guarded nonnegative stock |
+| StockAdjustment | batchId, actorId, signed integer delta, reason | unique tenant + operationKey; append-only |
+| Substitution | prescription/visit/doctor/line, exact alternative, reason, REQUESTED/APPROVED | unique tenant + prescriptionId + lineIndex; approval cannot change alternative |
+| Dispense | prescription/visit/patient/pharmacist, immutable batch allocation snapshots | unique tenant + visitId; durable operationKey and fingerprint |
+| LabResult | order/visit/patient/doctor, revision, manual observations, correction reason, sign/verify/release identities/times, contentHash | unique tenant + orderId + revision; unique tenant + operationKey; draft-only content edits |
+
+Tenant.invoiceSequence increments within invoice issuance. CashSession adds receipt total/version and OPEN/CLOSED/REVIEWED snapshots; old OPEN floats lacking new fields are treated as zero receipts/version zero and safely upgraded on mutation. LabOrder adds version/currentResultId and the processing states. Old orders start at version zero without destructive backfill. Monetary values and dispensing counts must remain safe integers; amount arithmetic uses BigInt before conversion.

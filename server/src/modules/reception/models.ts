@@ -54,7 +54,17 @@ export interface CashSession extends Row {
   receptionistId: string;
   openingFloatMinor: number;
   currency: "INR";
-  state: "OPEN";
+  state: "OPEN" | "CLOSED" | "REVIEWED";
+  version: number;
+  cashReceiptsMinor: number;
+  countedMinor: number | null;
+  expectedMinor: number | null;
+  varianceMinor: number | null;
+  varianceReason: string;
+  closedAt: Date | null;
+  reviewedBy: string;
+  reviewNote: string;
+  reviewedAt: Date | null;
   openedAt: Date;
   operationKey: string;
   requestHash: string;
@@ -165,7 +175,21 @@ export const cashSessionSchema = make({
     max: Number.MAX_SAFE_INTEGER,
   },
   currency: { type: String, enum: ["INR"], required: true },
-  state: { type: String, enum: ["OPEN"], default: "OPEN" },
+  state: {
+    type: String,
+    enum: ["OPEN", "CLOSED", "REVIEWED"],
+    default: "OPEN",
+  },
+  version: { type: Number, default: 0 },
+  cashReceiptsMinor: { type: Number, default: 0 },
+  countedMinor: { type: Number, default: null },
+  expectedMinor: { type: Number, default: null },
+  varianceMinor: { type: Number, default: null },
+  varianceReason: { type: String, default: "" },
+  closedAt: { type: Date, default: null },
+  reviewedBy: { type: String, default: "" },
+  reviewNote: { type: String, default: "" },
+  reviewedAt: { type: Date, default: null },
   openedAt: { type: Date, default: Date.now },
   operationKey: { type: String, required: true },
   requestHash: { type: String, required: true },

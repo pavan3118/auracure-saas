@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> **Specification baseline approved by the user; Phase 4 implementation is under review.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Testing & QA
 
@@ -68,3 +68,7 @@ The user authorized an Atlas-independent fallback. Root npm test now provisions 
 ## Phase 3 validation scope
 
 The Phase 3 suite adds actual replica-set tests for concurrent claim ownership, same-doctor active-visit uniqueness, note/version finalization, session-bound 120-second leases, expiry/stale updates, password-confirmed signing, immutable revisions, retained draft discard, order RBAC/assignment scope, duplicate completion metering and append-only corrections. Unit cases validate the approved clinical payloads without asserting clinical safety. UI cases enforce explicit leasing/signing/completion intent and preserve unsaved input on failure. The third browser journey exercises the real doctor workflow with synthetic data. Final counts and executed commands are recorded in PHASE3-REVIEW.md.
+
+## Phase 4 acceptance evidence
+
+PHASE4-REVIEW.md records the final executed counts. Added exact tax-rounding/overflow/timezone/product-identity unit cases; real replica-set role/tenant/ownership, invoice issuance, immutable content, duplicate receipts, competing balance payments, cash-close races, legacy float, FEFO/expired stock, multi-line rollback, dispensing races, exact generic approval and lab correction/reverification cases. UI tests check manual receipts, owner proof, exact alternative review, doctor verification and server errors. The retained three Chromium journeys include a combined Phase 3/4 synthetic-facility workflow; no extra onboarding allowance is introduced. Audit/retry assertions check that clinical and credential payloads are absent. External CodeRabbit and production-provider evidence are not inferred from these internal checks.

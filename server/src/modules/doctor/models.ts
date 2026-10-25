@@ -53,11 +53,19 @@ export interface Prescription extends Row {
   operationKey: string;
 }
 export interface LabOrder extends Row {
+  version: number;
+  currentResultId: string;
   visitId: string;
   patientId: string;
   doctorId: string;
   tests: { name: string; instructions?: string }[];
-  state: "ORDERED";
+  state:
+    | "ORDERED"
+    | "COLLECTED"
+    | "RESULT_DRAFT"
+    | "TECH_SIGNED"
+    | "DOCTOR_VERIFIED"
+    | "RELEASED";
   operationKey: string;
 }
 export interface ServiceOrder extends Row {
@@ -166,7 +174,20 @@ export const labOrderSchema = make({
     ],
     required: true,
   },
-  state: { type: String, enum: ["ORDERED"], default: "ORDERED" },
+  state: {
+    type: String,
+    enum: [
+      "ORDERED",
+      "COLLECTED",
+      "RESULT_DRAFT",
+      "TECH_SIGNED",
+      "DOCTOR_VERIFIED",
+      "RELEASED",
+    ],
+    default: "ORDERED",
+  },
+  version: { type: Number, default: 0 },
+  currentResultId: { type: String, default: "" },
   operationKey: { type: String, required: true },
 });
 labOrderSchema.index({ tenant_id: 1, operationKey: 1 }, { unique: true });

@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> **Specification baseline approved by the user; Phase 4 implementation is under review.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # API specification
 
@@ -118,3 +118,21 @@ Cash closing/review, payments, clinical claim-next/completion and patient-record
 ## Phase 3 implementation
 
 The Phase 3 endpoints in PHASE3-CONTRACT.md are now implemented. That contract adds the assigned doctor workspace/history, consultation saves, explicit 120-second session-bound draft leases, password-confirmed signing, retained unsigned draft discard, correction revisions, lab/service order creation, completion and append-only post-completion note amendments. All use the existing JWT/purpose/role guards, strict schemas and request/error envelopes. Read projections and retry semantics are detailed in PHASE3-REVIEW.md. No pharmacy dispense, lab result, payment or final cash-close API is exposed.
+
+## Phase 4 implemented endpoints
+
+The concrete Phase 4 API in PHASE4-CONTRACT.md supersedes earlier proposed paths for these resources. GET collections reject unknown queries. All mutations validate strict bodies; tenant_id is rejected. POST operations require Idempotency-Key (16–128 characters); patches use expected_version. Responses retain the existing data/error envelope.
+
+| Resource | Endpoints under /api/v1 | Roles |
+| --- | --- | --- |
+| Invoices | GET/POST /invoices; GET/PATCH /invoices/:id; POST /invoices/:id/issue | OWNER/RECEPTIONIST; linked PATIENT read issued own only |
+| Void | POST /invoices/:id/void | OWNER + fresh MFA; unpaid draft/issued only |
+| Receipts | GET/POST /invoices/:id/payments | POST RECEPTIONIST; read invoice scope |
+| Cash | GET /cash/sessions/:id; POST /cash/sessions/:id/close, /review | own RECEPTIONIST close; OWNER read/review + MFA |
+| Stock | GET/POST /pharmacy/batches; POST /pharmacy/batches/:id/adjustments | OWNER/PHARMACIST read; verified PHARMACIST mutation |
+| Fulfillment | GET /pharmacy/prescriptions; POST /prescriptions/:id/dispense | PHARMACIST; licence verification for mutation |
+| Substitutions | GET /pharmacy/substitutions; POST /prescriptions/:id/substitutions; POST /pharmacy/substitutions/:id/approve | PHARMACIST request; prescribing DOCTOR password-approved alternative |
+| Sample/result | GET /lab/orders; POST /lab/orders/:id/collect; GET/POST /lab/orders/:id/results; GET/PATCH /lab/results/:id | LAB process; requesting DOCTOR read; linked PATIENT current released result GET only |
+| Sign/verify/release | POST /lab/results/:id/sign, /verify, /release | LAB + six-digit signoff_pin; requesting DOCTOR + password; LAB explicit release |
+
+Lists are bounded to 100; patients retain existing search/cursor pagination. No arbitrary query/filter/tenant selector is accepted. Invoice lines require description, quantity, unit_price and tax_percent. Close requires expected_version, counted_cash and variance_reason if different. Review requires expected_version, review_note and mfa_proof. Result bodies require observations with name/value, optional unit/reference_interval/comments and overall comments; new signed-result revisions require correction_reason. Stale state/version/stock/overpayments return conflicts, invalid amounts/missing quantities return validation errors; inaccessible resources return 404.

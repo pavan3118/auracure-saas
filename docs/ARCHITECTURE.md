@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> **Specification baseline approved by the user; Phase 4 implementation is under review.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Architecture
 
@@ -54,3 +54,9 @@ Security-maintained React Router 7.18.4 replaces the proposed v6; declarative Br
 Phase 1 uses MongoDB-backed shared rate buckets instead of introducing Redis solely for limiting. They are platform-scoped operational records without tenant_id (pre-authentication limits), hold hashes/counters/expiry, and expire through TTL. Tenant repositories scope domain reads/writes; narrow bootstrap/auth resolver methods and the outbox worker are explicit privileged boundaries. No SYSTEM_ADMIN HTTP surface, clinical module or paid integration is exposed in Phase 1.
 
 SMTP contact verification and email invitations/recovery are implemented behind Mailer. Development uses a private local mailbox. Patient OTP uses that development mailbox only; production OTP fails closed pending the approved WhatsApp adapter in Phase 5. No SMS or WhatsApp delivery is claimed.
+
+## Phase 4 service boundaries
+
+Billing owns invoice pricing/issuance, immutable receipt/movement writes and cash reconciliation; Pharmacy owns exact product identity, FEFO allocation and substitutions; Laboratory owns versioned sample/result processing. Express adapters apply strict contracts and verified role guards, then services use scoped repositories and the shared transaction/retry ledger. No external provider is contacted by these services.
+
+Invoice sequence and issuance commit together. Receipt, invoice balance, cash total/movement and audit commit together. Cash closing and receipt recording write the same session version. Dispensing locks the encounter alongside prescription creation, decrements guarded batches and inserts one encounter-unique dispense; any missing line stock rolls back the whole allocation. Lab transitions write both current order pointer/version and result version, serializing corrections against signing, verification and release. Signed observations remain append-only revisions. Multi-instance live queue fan-out is still the prior single-process limitation; Phase 4 adds no claim of distributed clinical notifications.

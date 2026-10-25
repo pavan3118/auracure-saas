@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 1 implementation is under review.**
+> **Specification baseline approved by the user; Phase 4 implementation is under review.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE1-REVIEW.md; planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # AuraCare — completed PRD draft
 
@@ -131,3 +131,7 @@ The user approved full name, a unique email or international mobile contact, opt
 ## Phase 3 approved clinical field decisions
 
 The user approved complaint and assessment as required at consultation completion, optional plan, and manually entered prescription medicine/strength/dose/route/frequency/duration with optional quantity/instructions. The user also approved manual test/service names, optional clinical instructions and the assigned doctor's current password for signing reauthentication. No catalogue, automated dosing or legal signature certification is assumed. See PHASE3-CONTRACT.md and PHASE3-REVIEW.md for the technical contract and evidence. Discarded unsigned drafts are retained administratively; signed revisions and completed notes remain immutable, with explicit revisions/amendments.
+
+## Phase 4 approved decisions and implementation
+
+The user explicitly authorized Phase 4 and approved its INR invoice/tax/receipt rules, full FEFO dispensing and doctor-approved substitutions, lab sign-off/verification/release, and owner-reviewed cash close. These decisions refine A04/A05/A06/A12; the original uploaded baseline remains authoritative. PHASE4-CONTRACT.md specifies the implemented endpoint and state contracts; PHASE4-REVIEW.md records validation and limits. Patient portal UI, external messaging, SaaS subscription prices/provider charges, refunds and deployment remain outside this phase.

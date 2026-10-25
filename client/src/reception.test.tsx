@@ -83,6 +83,12 @@ beforeEach(() => {
             id: "cash1",
             opening_float_minor: 29,
             currency: "INR",
+            version: 0,
+            expected_cash_minor: 29,
+            counted_cash_minor: null,
+            variance_minor: null,
+            variance_reason: "",
+            review_note: "",
             state: "OPEN",
             opened_at: new Date().toISOString(),
           },
@@ -188,7 +194,7 @@ describe("reception user workflows", () => {
       ),
     );
   });
-  it("records INR opening float and exposes no payment or close action", async () => {
+  it("records INR opening float and offers explicit cash closing", async () => {
     render(<Reception />);
     const user = userEvent.setup();
     await user.click(screen.getByRole("tab", { name: "Cash float" }));
@@ -206,8 +212,8 @@ describe("reception user workflows", () => {
       expect.any(Object),
     );
     expect(
-      screen.queryByRole("button", { name: /close shift|collect payment/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: "Close cash shift" }),
+    ).toBeInTheDocument();
   });
   it("limits owners to operational queue and read-only cash without a patient directory or vitals form", async () => {
     mocks.role = "OWNER";

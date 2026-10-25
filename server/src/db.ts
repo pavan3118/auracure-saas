@@ -1,4 +1,23 @@
 import {
+  invoiceSchema,
+  paymentSchema,
+  cashMovementSchema,
+  type Invoice,
+  type Payment,
+  type CashMovement,
+} from "./modules/billing/models.js";
+import {
+  batchSchema,
+  stockAdjustmentSchema,
+  substitutionSchema,
+  dispenseSchema,
+  type Batch,
+  type StockAdjustment,
+  type Substitution,
+  type Dispense,
+} from "./modules/pharmacy/models.js";
+import { resultSchema, type LabResult } from "./modules/laboratory/models.js";
+import {
   noteSchema,
   amendmentSchema,
   prescriptionSchema,
@@ -67,6 +86,7 @@ export interface Tenant extends Row {
   ownerId: string;
   governanceVersion: number;
   queueSequence: number;
+  invoiceSequence: number;
 }
 export interface Challenge extends Row {
   purpose: "INVITE" | "RECOVERY" | "OTP";
@@ -167,6 +187,7 @@ const tenantSchema = schema({
   ownerId: { type: String, required: true },
   governanceVersion: { type: Number, default: 0 },
   queueSequence: { type: Number, default: 0 },
+  invoiceSequence: { type: Number, default: 0 },
 });
 const challengeSchema = schema({
   purpose: String,
@@ -332,6 +353,14 @@ class Scoped<T extends Row> {
   }
 }
 export class Database {
+  private invoicesModel;
+  private paymentsModel;
+  private cashMovementsModel;
+  private batchesModel;
+  private adjustmentsModel;
+  private substitutionsModel;
+  private dispensesModel;
+  private labResultsModel;
   private notesModel;
   private amendmentsModel;
   private prescriptionsModel;
@@ -355,6 +384,29 @@ export class Database {
     this.operationsModel = connection.model<Operation>(
       "Operation",
       operationSchema,
+    );
+    this.invoicesModel = connection.model<Invoice>("Invoice", invoiceSchema);
+    this.paymentsModel = connection.model<Payment>("Payment", paymentSchema);
+    this.cashMovementsModel = connection.model<CashMovement>(
+      "CashMovement",
+      cashMovementSchema,
+    );
+    this.batchesModel = connection.model<Batch>("StockBatch", batchSchema);
+    this.adjustmentsModel = connection.model<StockAdjustment>(
+      "StockAdjustment",
+      stockAdjustmentSchema,
+    );
+    this.substitutionsModel = connection.model<Substitution>(
+      "Substitution",
+      substitutionSchema,
+    );
+    this.dispensesModel = connection.model<Dispense>(
+      "Dispense",
+      dispenseSchema,
+    );
+    this.labResultsModel = connection.model<LabResult>(
+      "LabResult",
+      resultSchema,
     );
     this.notesModel = connection.model<Note>("ConsultationNote", noteSchema);
     this.amendmentsModel = connection.model<Amendment>(
@@ -402,6 +454,30 @@ export class Database {
       ),
     );
     this.rates.schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  }
+  invoices(t: string) {
+    return new Scoped(this.invoicesModel, t);
+  }
+  payments(t: string) {
+    return new Scoped(this.paymentsModel, t);
+  }
+  cashMovements(t: string) {
+    return new Scoped(this.cashMovementsModel, t);
+  }
+  batches(t: string) {
+    return new Scoped(this.batchesModel, t);
+  }
+  adjustments(t: string) {
+    return new Scoped(this.adjustmentsModel, t);
+  }
+  substitutions(t: string) {
+    return new Scoped(this.substitutionsModel, t);
+  }
+  dispenses(t: string) {
+    return new Scoped(this.dispensesModel, t);
+  }
+  labResults(t: string) {
+    return new Scoped(this.labResultsModel, t);
   }
   notes(t: string) {
     return new Scoped(this.notesModel, t);

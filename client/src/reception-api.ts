@@ -30,9 +30,15 @@ export interface CashFloat {
   receptionist_id: string;
   opening_float_minor: number;
   currency: "INR";
-  state: "OPEN";
+  state: "OPEN" | "CLOSED" | "REVIEWED";
+  version: number;
+  expected_cash_minor: number;
+  counted_cash_minor: number | null;
+  variance_minor: number | null;
+  variance_reason: string;
+  review_note: string;
   opened_at: string;
-  reconciliation_available: false;
+  reconciliation_available: boolean;
 }
 export interface Observation {
   code: string;

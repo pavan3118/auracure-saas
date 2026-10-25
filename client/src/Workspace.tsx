@@ -1,3 +1,4 @@
+import { Billing, Pharmacy, Laboratory } from "./Operations";
 import { Doctor } from "./Doctor";
 import { Reception } from "./Reception";
 import { useCallback, useEffect, useState } from "react";
@@ -43,13 +44,24 @@ export function Workspace() {
   const auth = useAuth(),
     me = auth.me!;
   const [page, setPage] = useState<
-      "overview" | "staff" | "audit" | "reception" | "doctor"
+      | "overview"
+      | "staff"
+      | "audit"
+      | "reception"
+      | "doctor"
+      | "billing"
+      | "pharmacy"
+      | "laboratory"
     >(
       me.user.role === "RECEPTIONIST"
         ? "reception"
         : me.user.role === "DOCTOR"
           ? "doctor"
-          : "overview",
+          : me.user.role === "PHARMACIST"
+            ? "pharmacy"
+            : me.user.role === "LAB"
+              ? "laboratory"
+              : "overview",
     ),
     [users, setUsers] = useState<User[]>([]),
     [invites, setInvites] = useState<Invitation[]>([]),
@@ -121,6 +133,30 @@ export function Workspace() {
               Doctor workspace
             </button>
           )}
+          {["OWNER", "RECEPTIONIST"].includes(me.user.role) && (
+            <button
+              className={page === "billing" ? "selected" : ""}
+              onClick={() => setPage("billing")}
+            >
+              Invoices & receipts
+            </button>
+          )}
+          {["PHARMACIST", "DOCTOR"].includes(me.user.role) && (
+            <button
+              className={page === "pharmacy" ? "selected" : ""}
+              onClick={() => setPage("pharmacy")}
+            >
+              {me.user.role === "DOCTOR" ? "Generic approvals" : "Pharmacy"}
+            </button>
+          )}
+          {["LAB", "DOCTOR"].includes(me.user.role) && (
+            <button
+              className={page === "laboratory" ? "selected" : ""}
+              onClick={() => setPage("laboratory")}
+            >
+              Laboratory
+            </button>
+          )}
           {owner && (
             <>
               <button
@@ -189,6 +225,9 @@ export function Workspace() {
           )}
           {page === "reception" && <Reception />}
           {page === "doctor" && <Doctor />}
+          {page === "billing" && <Billing />}
+          {page === "pharmacy" && <Pharmacy />}
+          {page === "laboratory" && <Laboratory />}
           {page === "overview" && (
             <>
               <div className="heading-row">
@@ -278,7 +317,7 @@ export function Workspace() {
               <section className="panel">
                 <div className="panel-heading">
                   <h2>Your facility setup</h2>
-                  <span className="badge">Phase 2</span>
+                  <span className="badge">Phase 4</span>
                 </div>
                 <div className="setup-row">
                   <span className="setup-check">✓</span>
@@ -303,8 +342,8 @@ export function Workspace() {
                   <div>
                     <strong>Reception and clinical workflows</strong>
                     <p>
-                      Reception is available in the live workspace. Doctor,
-                      pharmacy and laboratory workflows follow in later phases.
+                      Reception, doctor, pharmacy, laboratory and billing
+                      workspaces are available according to your role.
                     </p>
                   </div>
                 </div>
@@ -649,7 +688,7 @@ export function Workspace() {
             )}
           <footer className="workspace-footer">
             AuraCare · Facility workspace
-            <span>Phase 3 — Doctor & consultation services</span>
+            <span>Phase 4 — Pharmacy, laboratory & billing</span>
           </footer>
         </main>
       </div>
