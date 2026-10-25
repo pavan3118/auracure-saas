@@ -1,6 +1,6 @@
 # AuraCare working rules
 
-- Read docs/PRD.md, docs/Authentication & Security.md and docs/PHASE1-REVIEW.md and docs/PHASE2-REVIEW.md and docs/PHASE3-REVIEW.md and docs/PHASE4-REVIEW.md before changing behavior. PRD baseline and explicit user decisions override original assumptions.
+- Read docs/PRD.md, docs/Authentication & Security.md and docs/PHASE1-REVIEW.md and docs/PHASE2-REVIEW.md and docs/PHASE3-REVIEW.md and docs/PHASE4-REVIEW.md and docs/PHASE5-REVIEW.md before changing behavior. PRD baseline and explicit user decisions override original assumptions.
 - Keep the six tenant roles exact. SYSTEM_ADMIN is platform-only and has no tenant API bypass.
 - Derive tenant scope from verified JWTs. Use scoped repositories; do not export raw domain models or accept client tenant_id fields. Public auth/bootstrap routes must use their documented proof boundary.
 - Passwords/PINs are hashed; TOTP secrets are encrypted. Never log/upload secrets, clinical details or the uploaded credential file. .local/ and .env files stay ignored.
@@ -8,3 +8,5 @@
 - Run npm run build, npm run lint and npm test for phase gates; use npm run test:e2e for relevant user journeys. Report real counts and external blockers.
 - Stop for phase review; do not start the next phase until the user requests NEXT PHASE.
 - Use this existing isolated checkout. Do not create a worktree unless explicitly requested.
+
+- Phase 5 provider adapters are local fixtures; no live charges/messages or public rollout without explicit activation and configured approved providers/pricing/legal/retention/hosting. Never describe local signed callback tests as external Stripe/Twilio verification.

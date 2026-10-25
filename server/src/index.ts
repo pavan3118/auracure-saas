@@ -1,3 +1,6 @@
+import { mkdir, access } from "node:fs/promises";
+import { constants } from "node:fs";
+import { Platform } from "./modules/platform/service.js";
 import { createServer } from "node:http";
 import { QueueEvents } from "./modules/reception/events.js";
 import { liveQueue } from "./modules/reception/live.js";
@@ -11,6 +14,14 @@ async function main() {
   const config = await loadConfig(),
     db = await connect(config.mongoUri),
     mail = mailer(config);
+  await mkdir(config.documentsDir ?? ".local/documents", {
+    recursive: true,
+    mode: 0o700,
+  });
+  await access(
+    config.documentsDir ?? ".local/documents",
+    constants.R_OK | constants.W_OK,
+  );
   const identity = await Identity.create(db, config, mail),
     events = new QueueEvents();
   const app = await createApp(identity, events.publish);
@@ -19,6 +30,24 @@ async function main() {
   server.listen(config.port, "0.0.0.0", () =>
     console.log(`AuraCare API listening on port ${config.port}`),
   );
+  const platform = new Platform(identity);
+  let platformBusy = false;
+  const runPlatform = () => {
+    if (platformBusy) return;
+    platformBusy = true;
+    void platform
+      .tick()
+      .catch(() =>
+        console.error(
+          "Usage/provider worker failed; durable records retained.",
+        ),
+      )
+      .finally(() => {
+        platformBusy = false;
+      });
+  };
+  runPlatform();
+  const platformWorker = setInterval(runPlatform, 15000);
   let busy = false;
   const worker = setInterval(() => {
     if (busy) return;
@@ -33,6 +62,7 @@ async function main() {
   }, 1000);
   async function stop() {
     clearInterval(worker);
+    clearInterval(platformWorker);
     await sockets.close();
     server.close(async () => {
       await db.connection.close();
@@ -42,6 +72,7 @@ async function main() {
   server.on("error", () => {
     console.error("API listener failed. Check the configured port.");
     clearInterval(worker);
+    clearInterval(platformWorker);
     void db.connection.close().finally(() => {
       process.exitCode = 1;
     });

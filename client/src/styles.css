@@ -1548,3 +1548,10 @@ td small {
   padding: 16px;
   margin: 12px 0;
 }
+.patient-portal {
+  max-width: 1050px;
+  margin: auto;
+}
+.patient-portal > .brand {
+  margin-bottom: 24px;
+}

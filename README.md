@@ -1,6 +1,6 @@
 # AuraCare
 
-Multi-tenant clinic workspace. Phase 1 provides verified onboarding, owner TOTP, staff credentials and tenant isolation. Phase 2 adds patient registration/search, check-in, vitals history, a live queue and INR opening floats. Phase 3 adds the assigned doctor workspace, consultation notes, leased prescription drafts/signing/revisions, test/service orders and completion metering. Phase 4 adds FEFO stock/dispensing, doctor-approved generic swaps, lab sign-off/verification/release, INR invoices/manual receipts and owner-reviewed cash close.
+Multi-tenant clinic workspace. Phase 1 provides verified onboarding, owner TOTP, staff credentials and tenant isolation. Phase 2 adds patient registration/search, check-in, vitals history, a live queue and INR opening floats. Phase 3 adds the assigned doctor workspace, consultation notes, leased prescription drafts/signing/revisions, test/service orders and completion metering. Phase 4 adds FEFO stock/dispensing, doctor-approved generic swaps, lab sign-off/verification/release, INR invoices/manual receipts and owner-reviewed cash close. Phase 5 adds patient contact-proof activation/portal/private PDFs, owner usage/credit views, local provider fixtures and container/backup smoke tooling.
 
 ## Development
 
@@ -32,4 +32,4 @@ See [Phase 2 review](docs/PHASE2-REVIEW.md) for approved fields, test evidence, 
 
 See [Phase 3 review](docs/PHASE3-REVIEW.md) and [clinical contract](docs/PHASE3-CONTRACT.md). Prescription fields are manually entered; no drug catalogue or dosing/safety recommendation is supplied. Signing creates an authenticated immutable clinical revision, not an externally certified digital-signature service.
 
-See [Phase 4 review](docs/PHASE4-REVIEW.md) and [operations contract](docs/PHASE4-CONTRACT.md). Manual receipts record previously collected payments; no gateway charge or automated clinical interpretation is performed. Phase 5 waits for NEXT PHASE.
+See [Phase 4 review](docs/PHASE4-REVIEW.md) and [operations contract](docs/PHASE4-CONTRACT.md). Manual receipts record previously collected payments; no gateway charge or automated clinical interpretation is performed. See [Phase 5 review](docs/PHASE5-REVIEW.md) and [deployment gates](deploy/README.md). Live provider messages/charges and production activation remain disabled.

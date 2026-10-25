@@ -20,7 +20,7 @@ async function post<T>(
     throw new Error(`Fixture request ${path} failed with HTTP ${r.status()}`);
   return (await r.json()).data as T;
 }
-test("doctor consultation through pharmacy dispensing, lab release, invoicing and cash review", async ({
+test("clinic workflow through patient activation, private PDF and owner usage", async ({
   page,
   playwright,
   baseURL,
@@ -431,5 +431,89 @@ test("doctor consultation through pharmacy dispensing, lab release, invoicing an
   await reception.getByRole("tab", { name: "Cash float" }).click();
   await expect(reception.getByText("REVIEWED", { exact: true })).toBeVisible();
   await recContext.close();
+  // Contact proof activates the existing dormant patient; no new public registration.
+  const patientEmail = `patient-${suffix}@auracare.test`;
+  await post(api, "/auth/patient-activation-requests", {
+    facility_subdomain: domain,
+    login: patientEmail,
+  });
+  const activationMail = await mailbox(
+    patientEmail,
+    "Activate your AuraCare portal",
+  );
+  const patientContext = await page.context().browser()!.newContext();
+  const patientPage = await patientContext.newPage();
+  await patientPage.goto(
+    `${baseURL}/patient-activate?token=${/token=([\w-]+)/.exec(activationMail)![1]}`,
+  );
+  await patientPage.getByLabel("Choose a four-digit portal PIN").fill("5831");
+  await patientPage.getByRole("button", { name: "Set my portal PIN" }).click();
+  await expect(patientPage.getByRole("status")).toContainText(
+    "Portal activated",
+  );
+  await patientPage.getByRole("link", { name: "Back to sign in" }).click();
+  await patientPage.getByLabel("Facility subdomain").fill(domain);
+  await patientPage.getByLabel("User ID or email").fill(patientEmail);
+  await patientPage
+    .getByLabel("Sign in as a patient with a portal PIN")
+    .check();
+  await patientPage.getByLabel("Four-digit portal PIN").fill("5831");
+  await patientPage
+    .getByRole("button", { name: "Sign in", exact: true })
+    .click();
+  await expect(
+    patientPage.getByRole("heading", { name: "Welcome, Jordan Example" }),
+  ).toBeVisible();
+  await patientPage
+    .getByRole("button", { name: "Read prescription revision 1" })
+    .click();
+  await expect(
+    patientPage.getByRole("heading", { name: "Prescription · revision 1" }),
+  ).toBeVisible();
+  const download = patientPage.waitForEvent("download");
+  await patientPage
+    .getByRole("button", { name: "Download prescription PDF" })
+    .click();
+  expect((await download).suggestedFilename()).toBe("auracare-record.pdf");
+  await patientPage
+    .getByRole("button", { name: "Read released result" })
+    .click();
+  await expect(
+    patientPage.getByRole("heading", { name: "Released result · revision 1" }),
+  ).toBeVisible();
+  await patientPage
+    .getByRole("button", { name: "View receipts for INV-000001" })
+    .click();
+  await expect(patientPage.getByText(/CASH · ₹118.00/)).toBeVisible();
+  await patientPage.reload();
+  await expect(
+    patientPage.getByRole("heading", { name: "Welcome, Jordan Example" }),
+  ).toBeVisible();
+  await patientContext.close();
+
+  const ownerContext = await page.context().browser()!.newContext();
+  const ownerPage = await ownerContext.newPage();
+  await ownerPage.goto(`${baseURL}/login`);
+  await ownerPage.getByLabel("Facility subdomain").fill(domain);
+  await ownerPage.getByLabel("User ID or email").fill(ownerEmail);
+  await ownerPage
+    .getByLabel("Password", { exact: true })
+    .fill("a secure phase three owner password");
+  await ownerPage.getByRole("button", { name: "Sign in", exact: true }).click();
+  await ownerPage
+    .getByLabel("Authenticator code or recovery code")
+    .fill(full.recovery_codes[2]!);
+  await ownerPage.getByRole("button", { name: "Verify code" }).click();
+  await ownerPage.getByRole("button", { name: "Usage & credits" }).click();
+  await expect(
+    ownerPage.getByText("Pricing not configured", { exact: true }),
+  ).toBeVisible();
+  await ownerPage
+    .getByRole("button", { name: "Record today's usage snapshot" })
+    .click();
+  await expect(
+    ownerPage.getByText(/Completed consultations: 1 · 1 slabs of 100/),
+  ).toBeVisible();
+  await ownerContext.close();
   await api.dispose();
 });

@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 4 implementation is under review.**
+> **Specification baseline approved by the user; Phase 5 local/sandbox implementation is under review; production activation gates remain open.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE5-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Project implementation plan
 
@@ -48,3 +48,7 @@ Phase 3 was explicitly authorized and its open clinical field/signing/order ques
 ## Phase 4 review gate
 
 Phase 4 was explicitly requested; all three open billing/pharmacy/lab/cash questions were approved by the user. Implemented scope and checks are in PHASE4-CONTRACT.md and PHASE4-REVIEW.md. Earlier phase reviews are historical. Stop after this phase for review; Phase 5 requires NEXT PHASE. No SaaS payment provider, real messaging or production rollout is activated here.
+
+## Phase 5 implementation review and external gates
+
+Phase 5 local/sandbox implementation is authorized and delivered for review; PHASE5-REVIEW.md records executed checks. The plan's production gate is not waived: actual vendor sandbox verification, production prices/tax/funding, residency/retention/legal rules, RPO/RTO/key custody, approved hosting and security review remain prerequisites to activation. Source build, nonroot container smoke and encrypted synthetic database restore are local evidence, not a live rollout or compliance certification. Do not start an unrequested next phase or enable real messages/charges/deployment implicitly.

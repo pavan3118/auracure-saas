@@ -1,3 +1,4 @@
+import { PlatformUsage } from "./PlatformUsage";
 import { Billing, Pharmacy, Laboratory } from "./Operations";
 import { Doctor } from "./Doctor";
 import { Reception } from "./Reception";
@@ -52,6 +53,7 @@ export function Workspace() {
       | "billing"
       | "pharmacy"
       | "laboratory"
+      | "usage"
     >(
       me.user.role === "RECEPTIONIST"
         ? "reception"
@@ -158,6 +160,14 @@ export function Workspace() {
             </button>
           )}
           {owner && (
+            <button
+              className={page === "usage" ? "selected" : ""}
+              onClick={() => setPage("usage")}
+            >
+              Usage & credits
+            </button>
+          )}
+          {owner && (
             <>
               <button
                 className={page === "staff" ? "selected" : ""}
@@ -226,6 +236,7 @@ export function Workspace() {
           {page === "reception" && <Reception />}
           {page === "doctor" && <Doctor />}
           {page === "billing" && <Billing />}
+          {page === "usage" && owner && <PlatformUsage />}
           {page === "pharmacy" && <Pharmacy />}
           {page === "laboratory" && <Laboratory />}
           {page === "overview" && (
@@ -688,7 +699,7 @@ export function Workspace() {
             )}
           <footer className="workspace-footer">
             AuraCare · Facility workspace
-            <span>Phase 4 — Pharmacy, laboratory & billing</span>
+            <span>Phase 5 — Patient portal & usage</span>
           </footer>
         </main>
       </div>

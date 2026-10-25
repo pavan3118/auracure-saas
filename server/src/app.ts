@@ -1,3 +1,4 @@
+import { portalRoutes } from "./modules/portal/routes.js";
 import { operationsRoutes } from "./modules/operations/routes.js";
 import { doctorRoutes } from "./modules/doctor/routes.js";
 import { receptionRoutes } from "./modules/reception/routes.js";
@@ -59,7 +60,12 @@ export async function createApp(identity: Identity, publish?: QueuePublisher) {
   app.use(
     helmet(),
     cors({ origin: c.origin, credentials: true }),
-    express.json({ limit: "32kb" }),
+    express.json({
+      limit: "32kb",
+      verify: (req, _res, bytes) => {
+        (req as Request & { rawBody?: Buffer }).rawBody = Buffer.from(bytes);
+      },
+    }),
     cookieParser(),
   );
   // Reject a conflicting browser origin even on endpoints that do not use cookies.
@@ -254,12 +260,49 @@ export async function createApp(identity: Identity, publish?: QueuePublisher) {
       );
     }),
   );
+  const patientContact = z.union([
+    email,
+    z.string().regex(/^\+[1-9]\d{7,14}$/),
+  ]);
+  app.post(
+    "/api/v1/auth/patient-activation-requests",
+    limit("patient-activate-request", 3, 15 * 60000, true),
+    route(async (req, res) => {
+      const b = z
+        .object({ facility_subdomain: subdomain, login: patientContact })
+        .strict()
+        .parse(req.body);
+      await identity.requestPatientActivation(b.facility_subdomain, b.login);
+      data(
+        res,
+        {
+          message:
+            "If the account is eligible, an activation link will be sent.",
+        },
+        202,
+      );
+    }),
+  );
+  app.post(
+    "/api/v1/auth/patient-activation",
+    limit("patient-activate", 5, 15 * 60000),
+    route(async (req, res) => {
+      const b = z
+        .object({ token: secret, portal_pin: z.string().regex(/^\d{4}$/) })
+        .strict()
+        .parse(req.body);
+      await identity.activatePatient(b.token, b.portal_pin, ctx(res).requestId);
+      data(res, {
+        message: "Portal activated. Sign in with your facility and PIN.",
+      });
+    }),
+  );
   app.post(
     "/api/v1/auth/otp-requests",
     limit("otp-request", 3, 15 * 60000, true),
     route(async (req, res) => {
       const b = z
-        .object({ facility_subdomain: subdomain, contact: email })
+        .object({ facility_subdomain: subdomain, contact: patientContact })
         .strict()
         .parse(req.body);
       await identity.requestOtp(b.facility_subdomain, b.contact);
@@ -404,7 +447,7 @@ export async function createApp(identity: Identity, publish?: QueuePublisher) {
     limit("recovery", 3, 15 * 60000, true),
     route(async (req, res) => {
       const b = z
-        .object({ facility_subdomain: subdomain, login: email })
+        .object({ facility_subdomain: subdomain, login: patientContact })
         .strict()
         .parse(req.body);
       await identity.recovery(b.facility_subdomain, b.login);
@@ -617,8 +660,20 @@ export async function createApp(identity: Identity, publish?: QueuePublisher) {
     }),
   );
   receptionRoutes(app, identity, { guard, route, data, ctx }, publish);
+  portalRoutes(app, identity, { guard, route, data, ctx });
   operationsRoutes(app, identity, { guard, route, data, ctx });
   doctorRoutes(app, identity, { guard, route, data, ctx }, publish);
+  app.use("/api", (_req, _res, next) => next(new AppError(404, "NOT_FOUND")));
+  if (c.frontendDir) {
+    app.use(express.static(c.frontendDir, { index: false }));
+    app.get("/{*path}", (req, res, next) => {
+      if (req.path.includes(".") && !req.path.endsWith(".html"))
+        return next(new AppError(404, "NOT_FOUND"));
+      res.sendFile("index.html", { root: c.frontendDir }, (error) => {
+        if (error) next(new AppError(503, "FRONTEND_UNAVAILABLE"));
+      });
+    });
+  }
   app.use((_req, _res, next) => next(new AppError(404, "NOT_FOUND")));
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     let e: AppError;

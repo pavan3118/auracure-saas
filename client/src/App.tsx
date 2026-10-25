@@ -1,3 +1,4 @@
+import { PatientPortal } from "./PatientPortal";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./auth";
 import {
@@ -7,6 +8,8 @@ import {
   Invite,
   Recover,
   PatientLink,
+  PatientActivate,
+  PatientOtpRequest,
 } from "./PublicPages";
 import { Workspace } from "./Workspace";
 export function App() {
@@ -24,7 +27,16 @@ export function App() {
         <SecurityGate />
       ) : auth.me ? (
         <Routes>
-          <Route path="/" element={<Workspace />} />
+          <Route
+            path="/"
+            element={
+              auth.me.user.role === "PATIENT" ? (
+                <PatientPortal />
+              ) : (
+                <Workspace />
+              )
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       ) : (
@@ -34,6 +46,8 @@ export function App() {
           <Route path="/invite" element={<Invite />} />
           <Route path="/recover" element={<Recover />} />
           <Route path="/patient-link" element={<PatientLink />} />
+          <Route path="/patient-activate" element={<PatientActivate />} />
+          <Route path="/patient-sign-in" element={<PatientOtpRequest />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       )}

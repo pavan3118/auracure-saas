@@ -83,3 +83,18 @@ export function errorMessage(err: unknown) {
   }
   return err instanceof Error ? err.message : "Something went wrong.";
 }
+export async function downloadDocument(id: string) {
+  const response = await http.get(
+    `/portal/documents/${encodeURIComponent(id)}/download`,
+    {
+      responseType: "blob",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+  const url = URL.createObjectURL(response.data as Blob),
+    a = document.createElement("a");
+  a.href = url;
+  a.download = "auracare-record.pdf";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

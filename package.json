@@ -23,7 +23,10 @@
     "test:e2e": "playwright test",
     "check:atlas": "tsx scripts/check-atlas.ts",
     "db:ping": "npm run db:ping -w server",
-    "setup:test-db": "tsx scripts/test-db.ts"
+    "setup:test-db": "tsx scripts/test-db.ts",
+    "test:backup": "tsx scripts/backup-restore-smoke.ts",
+    "setup:backup-tools": "tsx scripts/prepare-backup-tools.ts",
+    "test:deployment": "tsx scripts/deployment-smoke.ts"
   },
   "devDependencies": {
     "@eslint/js": "9.39.1",

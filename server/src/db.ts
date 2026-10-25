@@ -1,4 +1,20 @@
 import {
+  documentSchema,
+  dailySchema,
+  walletSchema,
+  walletEntrySchema,
+  messageSchema,
+  eventSchema,
+  platformBillSchema,
+  type DocumentRecord,
+  type DailyUsage,
+  type Wallet,
+  type WalletEntry,
+  type MessageJob,
+  type ProviderEvent,
+  type PlatformBill,
+} from "./modules/platform/models.js";
+import {
   invoiceSchema,
   paymentSchema,
   cashMovementSchema,
@@ -89,7 +105,7 @@ export interface Tenant extends Row {
   invoiceSequence: number;
 }
 export interface Challenge extends Row {
-  purpose: "INVITE" | "RECOVERY" | "OTP";
+  purpose: "INVITE" | "RECOVERY" | "OTP" | "PATIENT_ACTIVATE";
   userId: string;
   login: string;
   role: Role;
@@ -312,6 +328,19 @@ class Scoped<T extends Row> {
       .session(session ?? null)
       .exec();
   }
+  async sum(q: FilterQuery<T>, field: string, session?: ClientSession) {
+    check(/^[A-Za-z][A-Za-z0-9]*$/.test(field), 500, "INVALID_FIELD");
+    const rows = await this.model
+      .aggregate<{ total: number }>([
+        { $match: this.filter(q) },
+        { $group: { _id: null, total: { $sum: `$${field}` } } },
+      ])
+      .session(session ?? null)
+      .exec();
+    const total = rows[0]?.total ?? 0;
+    check(Number.isSafeInteger(total), 500, "METER_OVERFLOW");
+    return total;
+  }
   async create(v: Partial<T>, session?: ClientSession) {
     const [d] = await this.model.create([{ ...v, tenant_id: this.tenantId }], {
       session,
@@ -353,6 +382,13 @@ class Scoped<T extends Row> {
   }
 }
 export class Database {
+  private documentsModel;
+  private dailyModel;
+  private walletsModel;
+  private walletEntriesModel;
+  private messagesModel;
+  private providerEventsModel;
+  private platformBillsModel;
   private invoicesModel;
   private paymentsModel;
   private cashMovementsModel;
@@ -384,6 +420,28 @@ export class Database {
     this.operationsModel = connection.model<Operation>(
       "Operation",
       operationSchema,
+    );
+    this.documentsModel = connection.model<DocumentRecord>(
+      "DocumentRecord",
+      documentSchema,
+    );
+    this.dailyModel = connection.model<DailyUsage>("DailyUsage", dailySchema);
+    this.walletsModel = connection.model<Wallet>("Wallet", walletSchema);
+    this.walletEntriesModel = connection.model<WalletEntry>(
+      "WalletEntry",
+      walletEntrySchema,
+    );
+    this.messagesModel = connection.model<MessageJob>(
+      "MessageJob",
+      messageSchema,
+    );
+    this.providerEventsModel = connection.model<ProviderEvent>(
+      "ProviderEvent",
+      eventSchema,
+    );
+    this.platformBillsModel = connection.model<PlatformBill>(
+      "PlatformBill",
+      platformBillSchema,
     );
     this.invoicesModel = connection.model<Invoice>("Invoice", invoiceSchema);
     this.paymentsModel = connection.model<Payment>("Payment", paymentSchema);
@@ -454,6 +512,62 @@ export class Database {
       ),
     );
     this.rates.schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  }
+  documents(t: string) {
+    return new Scoped(this.documentsModel, t);
+  }
+  dailyUsage(t: string) {
+    return new Scoped(this.dailyModel, t);
+  }
+  wallets(t: string) {
+    return new Scoped(this.walletsModel, t);
+  }
+  walletEntries(t: string) {
+    return new Scoped(this.walletEntriesModel, t);
+  }
+  messages(t: string) {
+    return new Scoped(this.messagesModel, t);
+  }
+  providerEvents(t: string) {
+    return new Scoped(this.providerEventsModel, t);
+  }
+  platformBills(t: string) {
+    return new Scoped(this.platformBillsModel, t);
+  }
+  // Narrow worker/provider boundaries return only opaque references and tenant scope.
+  async activeTenantRefs() {
+    return this.tenantsModel
+      .find({ status: "ACTIVE" }, { _id: 1 })
+      .lean()
+      .cursor();
+  }
+  async pendingMessageRefs() {
+    return this.messagesModel
+      .find(
+        {
+          state: "QUEUED",
+          $or: [
+            { nextAttempt: { $lte: new Date() } },
+            { nextAttempt: { $exists: false } },
+          ],
+        },
+        { _id: 1, tenant_id: 1 },
+      )
+      .sort({ nextAttempt: 1, _id: 1 })
+      .limit(100)
+      .lean()
+      .exec();
+  }
+  async resolveProviderReference(reference: string, kind: "MESSAGE" | "BILL") {
+    return kind === "MESSAGE"
+      ? this.messagesModel
+          .findOne({ providerRef: reference }, { _id: 1, tenant_id: 1 })
+          .lean()
+          .exec()
+      : this.platformBillsModel
+          .findOne({ providerRef: reference }, { _id: 1, tenant_id: 1 })
+          .lean()
+          .exec();
   }
   invoices(t: string) {
     return new Scoped(this.invoicesModel, t);

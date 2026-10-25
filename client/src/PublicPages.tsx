@@ -57,6 +57,8 @@ export function Login() {
           />
           <div className="form-link">
             <Link to="/recover">Forgot your password?</Link>
+            <Link to="/patient-activate">Activate patient portal</Link>
+            <Link to="/patient-sign-in">Patient sign-in link</Link>
           </div>
         </Form>
         <p className="auth-footer">
@@ -654,6 +656,110 @@ export function PatientLink() {
         >
           <p>Links are single-use and expire after five minutes.</p>
         </Form>
+      </section>
+    </PublicLayout>
+  );
+}
+
+export function PatientActivate() {
+  const [token] = useState(
+      () => new URLSearchParams(location.search).get("token") ?? "",
+    ),
+    [done, setDone] = useState(false),
+    [message, setMessage] = useState("");
+  useEffect(() => {
+    history.replaceState(null, "", location.pathname);
+  }, []);
+  return (
+    <PublicLayout>
+      <section className="auth-card">
+        <Heading kicker="PATIENT ACCESS" title="Activate your patient portal">
+          Use the contact already registered by your facility. Your care team
+          cannot choose or view your PIN.
+        </Heading>
+        {done ? (
+          <p role="status">{message}</p>
+        ) : (
+          <Form
+            submit={token ? "Set my portal PIN" : "Request activation link"}
+            onSubmit={async (d) => {
+              if (token) {
+                await api("POST", "/auth/patient-activation", {
+                  token,
+                  portal_pin: value(d, "pin"),
+                });
+                setMessage(
+                  "Portal activated. Sign in with your facility and PIN.",
+                );
+              } else {
+                await api("POST", "/auth/patient-activation-requests", {
+                  facility_subdomain: value(d, "subdomain"),
+                  login: value(d, "login"),
+                });
+                setMessage(
+                  "If the account is eligible, an activation link will be sent.",
+                );
+              }
+              setDone(true);
+            }}
+          >
+            {token ? (
+              <Field
+                label="Choose a four-digit portal PIN"
+                name="pin"
+                type="password"
+                minLength={4}
+                maxLength={4}
+              />
+            ) : (
+              <>
+                <Field label="Facility subdomain" name="subdomain" />
+                <Field
+                  label="Registered email or international mobile"
+                  name="login"
+                />
+              </>
+            )}
+          </Form>
+        )}
+        <p>
+          <Link to="/login">Back to sign in</Link>
+        </p>
+      </section>
+    </PublicLayout>
+  );
+}
+export function PatientOtpRequest() {
+  const [sent, setSent] = useState(false);
+  return (
+    <PublicLayout>
+      <section className="auth-card">
+        <Heading kicker="PATIENT SIGN-IN" title="Request a sign-in link">
+          Use your verified registered contact.
+        </Heading>
+        {sent ? (
+          <p role="status">
+            If the account is eligible, a sign-in link will be sent.
+          </p>
+        ) : (
+          <Form
+            submit="Send sign-in link"
+            onSubmit={async (d) => {
+              await api("POST", "/auth/otp-requests", {
+                facility_subdomain: value(d, "subdomain"),
+                contact: value(d, "contact"),
+              });
+              setSent(true);
+            }}
+          >
+            <Field label="Facility subdomain" name="subdomain" />
+            <Field
+              label="Registered email or international mobile"
+              name="contact"
+            />
+          </Form>
+        )}
+        <Link to="/login">Back to sign in</Link>
       </section>
     </PublicLayout>
   );

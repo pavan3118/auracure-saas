@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 4 implementation is under review.**
+> **Specification baseline approved by the user; Phase 5 local/sandbox implementation is under review; production activation gates remain open.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE5-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Architecture
 
@@ -60,3 +60,13 @@ SMTP contact verification and email invitations/recovery are implemented behind 
 Billing owns invoice pricing/issuance, immutable receipt/movement writes and cash reconciliation; Pharmacy owns exact product identity, FEFO allocation and substitutions; Laboratory owns versioned sample/result processing. Express adapters apply strict contracts and verified role guards, then services use scoped repositories and the shared transaction/retry ledger. No external provider is contacted by these services.
 
 Invoice sequence and issuance commit together. Receipt, invoice balance, cash total/movement and audit commit together. Cash closing and receipt recording write the same session version. Dispensing locks the encounter alongside prescription creation, decrements guarded batches and inserts one encounter-unique dispense; any missing line stock rolls back the whole allocation. Lab transitions write both current order pointer/version and result version, serializing corrections against signing, verification and release. Signed observations remain append-only revisions. Multi-instance live queue fan-out is still the prior single-process limitation; Phase 4 adds no claim of distributed clinical notifications.
+
+## Phase 5 runtime and local provider adapters
+
+Portal joins only authorized patient projections. Document rendering uses PDFKit and the bundled, licensed DejaVu Sans font, private opaque files, immutable source metadata and SHA-256 integrity checks; a persistent private volume is required in production. No public object server is introduced. The bounded portal shows at most 100 recent records per section; metering sums all source records without that display limit.
+
+Platform's worker captures one UTC-day observation of active DOCTOR count and retained document metadata bytes for each active tenant; it does not invent missing history. The existing source-unique completion meter provides exact consultation counts/slabs. Owner reports missing coverage and reconciliation differences; estimates use explicit configured rate versions and integer arithmetic. Daily sampling convention remains reviewable before charging.
+
+MessagingProvider and BillingProvider have deterministic local adapters and signed fixture callbacks. New pending message records are durable and use due-time claims/backoff; credit reservation, acceptance debit and failed-delivery refund are transactional and source-deduplicated. Adapters must deduplicate provider references before any live at-least-once dispatch is enabled. Stripe/Twilio and S3-compatible services remain proposals without credentials or external verification. Local acceptance is not a real delivery claim.
+
+The pinned multi-stage Docker image builds client/server, prunes development dependencies, serves SPA/API on one site and runs nonroot. The build accepts a public npm-cache context for restricted-network offline builds with lockfile integrity verification. A fresh production-mode container smoke uses only generated synthetic keys and an isolated replica set. The CI workflow is added; local results do not claim a completed remote CI run or a public deployment. Production stays single-instance until shared live/object adapters are configured.

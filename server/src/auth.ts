@@ -545,6 +545,12 @@ export class Identity {
       : this.session(next);
   }
   async recovery(subdomain: string, login: string) {
+    check(
+      !this.config.production || login.includes("@"),
+      503,
+      "PROVIDER_UNAVAILABLE",
+      "Mobile recovery delivery is not configured.",
+    );
     const t = await this.db.resolveSubdomain(subdomain);
     const u = t
       ? await this.db
@@ -662,6 +668,140 @@ export class Identity {
         u.login,
         "AuraCare password changed",
         "Your password was reset. Contact your facility if this was not you.",
+        s,
+      );
+    });
+  }
+  async requestPatientActivation(subdomain: string, login: string) {
+    check(
+      !this.config.production || login.includes("@"),
+      503,
+      "PROVIDER_UNAVAILABLE",
+      "Mobile delivery is not configured.",
+    );
+    const t = await this.db.resolveSubdomain(subdomain);
+    const u = t
+      ? await this.db.users(t._id).findOne({
+          login,
+          role: "PATIENT",
+          status: "ACTIVE",
+          contactVerified: false,
+        })
+      : null;
+    if (!u || !(await this.db.patients(u.tenant_id).findOne({ userId: u._id })))
+      return;
+    const raw = token();
+    await this.db.transaction(async (s) => {
+      const current = await this.db.users(u.tenant_id).update(
+        {
+          _id: u._id,
+          role: "PATIENT",
+          status: "ACTIVE",
+          contactVerified: false,
+        },
+        { $inc: { challengeVersion: 1 } },
+        s,
+      );
+      if (!current) return;
+      await this.db
+        .challenges(u.tenant_id)
+        .updateMany(
+          { userId: u._id, purpose: "PATIENT_ACTIVATE", consumedAt: null },
+          { $set: { consumedAt: new Date() } },
+          s,
+        );
+      await this.db.challenges(u.tenant_id).create(
+        {
+          purpose: "PATIENT_ACTIVATE",
+          userId: u._id,
+          login: u.login,
+          role: "PATIENT",
+          hash: digest(raw),
+          approved: true,
+          expiresAt: new Date(Date.now() + 15 * 60000),
+        },
+        s,
+      );
+      await queueMail(
+        this.db,
+        this.config,
+        u.tenant_id,
+        u.login,
+        "Activate your AuraCare portal",
+        `Open ${this.config.origin}/patient-activate?token=${raw}\nSingle use; expires in 15 minutes. Choose your own portal PIN.`,
+        s,
+      );
+    });
+  }
+  async activatePatient(raw: string, pin: string, requestId: string) {
+    check(/^\d{4}$/.test(pin), 400, "VALIDATION_ERROR");
+    const c = await this.db.resolveChallenge(digest(raw), "PATIENT_ACTIVATE");
+    check(c, 400, "CHALLENGE_INVALID");
+    const hash = await this.hashPin(pin);
+    await this.db.transaction(async (s) => {
+      check(
+        await this.db
+          .tenants(c.tenant_id)
+          .findOne({ _id: c.tenant_id, status: "ACTIVE" }, s),
+        400,
+        "CHALLENGE_INVALID",
+      );
+      check(
+        await this.db.challenges(c.tenant_id).update(
+          {
+            _id: c._id,
+            purpose: "PATIENT_ACTIVATE",
+            consumedAt: null,
+            expiresAt: { $gt: new Date() },
+          },
+          { $set: { consumedAt: new Date() } },
+          s,
+        ),
+        400,
+        "CHALLENGE_INVALID",
+      );
+      const u = await this.db.users(c.tenant_id).update(
+        {
+          _id: c.userId,
+          role: "PATIENT",
+          status: "ACTIVE",
+          contactVerified: false,
+          login: c.login,
+        },
+        {
+          $set: { pinHash: hash, contactVerified: true },
+          $inc: { credentialVersion: 1, challengeVersion: 1 },
+        },
+        s,
+      );
+      check(
+        u &&
+          (await this.db
+            .patients(c.tenant_id)
+            .findOne({ userId: c.userId }, s)),
+        400,
+        "CHALLENGE_INVALID",
+      );
+      await this.db
+        .sessions(c.tenant_id)
+        .updateMany(
+          { userId: c.userId },
+          { $set: { revokedAt: new Date() } },
+          s,
+        );
+      await this.db
+        .challenges(c.tenant_id)
+        .updateMany(
+          { userId: c.userId, consumedAt: null },
+          { $set: { consumedAt: new Date() } },
+          s,
+        );
+      await this.audit(
+        c.tenant_id,
+        c.userId,
+        "PATIENT_PORTAL_ACTIVATED",
+        c.userId,
+        requestId,
         s,
       );
     });

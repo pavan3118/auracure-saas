@@ -1,0 +1,17 @@
+.git
+.local
+.env
+.env.*
+node_modules
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+test-results
+playwright-report
+attachments
+**/.env
+**/.env.*
+**/.local
+**/*.pem
+**/*.key

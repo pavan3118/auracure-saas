@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 4 implementation is under review.**
+> **Specification baseline approved by the user; Phase 5 local/sandbox implementation is under review; production activation gates remain open.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE5-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Design specification
 
@@ -44,3 +44,9 @@ Approve token palette, brand assets, screen wireframes, patient identity/recover
 Verified PHARMACIST accounts land on Stock & dispensing with batch receipt, reasoned adjustments, exact prescription lines, FEFO full fulfillment and retained allocation snapshots. Generic requests show original and alternative product labels; doctors explicitly approve with their current password. LAB lands on Samples & results with collection, manual analytes, draft editing, PIN sign-off, attributed revision history and verified-result release. DOCTOR navigation adds laboratory verification and generic approvals.
 
 OWNER/RECEPTIONIST navigation adds invoices and receipts. Patient search feeds the invoice chooser; multi-line drafts display explicit prices/taxes and can be edited before issuance. Receipt forms distinguish cash from manually recorded noncash references. Reception cash shows expected/count/variance and offers own-shift close; owners review CLOSED records with fresh MFA. Server errors remain visible without success claims; state transitions refetch authorized projections. No portal result UI is delivered before Phase 5.
+
+## Phase 5 patient and owner views
+
+PATIENT lands in a separate portal with own details, visit status, signed prescription revision history, released laboratory records, invoices/receipts and authenticated PDF download forms. There is no staff navigation or editing interface. Sign-in adds activation and single-use link entry points; token URLs are removed from browser history before proof submission. Refresh clears open clinical detail and refetches authorization-filtered summaries.
+
+OWNER gets Usage & credits with month selection, observed seat-days/storage byte-days, consultation count/slabs, message wallet debits/refunds/reservations, coverage, reconciliation and explicit “Pricing not configured.” Local test funding requires fresh MFA, and fixed-template reminder previews explicitly say no WhatsApp/SMS is actually sent. Production hides those actions and the server independently rejects them. No real charge/pay button is introduced. Missing fonts/denied downloads show errors rather than altered or unauthorized reports.

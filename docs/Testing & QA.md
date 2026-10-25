@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 4 implementation is under review.**
+> **Specification baseline approved by the user; Phase 5 local/sandbox implementation is under review; production activation gates remain open.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE5-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Testing & QA
 
@@ -72,3 +72,9 @@ The Phase 3 suite adds actual replica-set tests for concurrent claim ownership, 
 ## Phase 4 acceptance evidence
 
 PHASE4-REVIEW.md records the final executed counts. Added exact tax-rounding/overflow/timezone/product-identity unit cases; real replica-set role/tenant/ownership, invoice issuance, immutable content, duplicate receipts, competing balance payments, cash-close races, legacy float, FEFO/expired stock, multi-line rollback, dispensing races, exact generic approval and lab correction/reverification cases. UI tests check manual receipts, owner proof, exact alternative review, doctor verification and server errors. The retained three Chromium journeys include a combined Phase 3/4 synthetic-facility workflow; no extra onboarding allowance is introduced. Audit/retry assertions check that clinical and credential payloads are absent. External CodeRabbit and production-provider evidence are not inferred from these internal checks.
+
+## Phase 5 checks and external evidence boundary
+
+PHASE5-REVIEW.md records final test counts and local smoke results. New tests cover all-role portal/platform denial, tenant/patient linkage, contact-proof activation and replay/expiry, source-bound PDF requests, simultaneous document creation, checksums/tamper handling, withdrawn lab releases, unsupported characters, all-record monthly meter aggregation, UTC/leap-month boundaries, missing coverage/rates, reconciliation, wallet concurrency, ambiguous-send backoff/fairness, signed raw callback authentication/replay/refund and production fail-closed behavior. UI tests exercise portal visibility, authenticated downloads, activation token stripping, generic responses and unconfigured pricing. The retained third browser journey now continues through patient activation/PIN login/own records/PDF/receipt/reload and owner usage.
+
+Local backup smoke verifies encrypted archive restoration, two synthetic tenant records, amounts, a unique tenant index and authentication-tag tamper rejection. Local production-mode deployment smoke checks a built nonroot container, same-site frontend/SPA, readiness/auth/API/private-file boundaries, disabled sandbox callbacks and PDF font runtime. Production object-store recovery, offsite key custody, real Stripe/Twilio sandbox calls and remote CI execution remain separately unverified. No local fixture is labelled external provider verification.

@@ -477,6 +477,12 @@ export class Billing {
           .cashSessions(p.tenantId)
           .findOne({ _id: id, receptionistId: p.userId }, s);
         check(c, 404, "NOT_FOUND");
+        check(
+          c.state === "OPEN" && (c.version ?? 0) === input.expected_version,
+          409,
+          "CONFLICT",
+          "Cash shift changed or was already closed.",
+        );
         const expected = c.openingFloatMinor + (c.cashReceiptsMinor ?? 0),
           variance = counted - expected;
         check(

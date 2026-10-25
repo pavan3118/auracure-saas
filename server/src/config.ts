@@ -14,6 +14,15 @@ export interface Config {
   mailDir: string;
   smtpUrl?: string;
   mailFrom: string;
+  documentsDir?: string;
+  sandboxWebhookSecret?: string;
+  frontendDir?: string;
+  prices?: {
+    version: string;
+    seatMinor: number;
+    slabMinor: number;
+    gbMinor: number;
+  };
 }
 export async function loadConfig(): Promise<Config> {
   const e = z
@@ -53,5 +62,24 @@ export async function loadConfig(): Promise<Config> {
     mailDir: e.MAIL_DIR,
     smtpUrl: e.SMTP_URL,
     mailFrom: e.MAIL_FROM,
+    documentsDir: process.env.DOCUMENTS_DIR || ".local/documents",
+    frontendDir: process.env.FRONTEND_DIR,
+    sandboxWebhookSecret: production
+      ? undefined
+      : process.env.SANDBOX_WEBHOOK_SECRET,
+    prices:
+      process.env.RATE_VERSION &&
+      ["RATE_SEAT_MINOR", "RATE_SLAB_MINOR", "RATE_GB_MINOR"].every(
+        (k) =>
+          /^(0|[1-9]\d*)$/.test(process.env[k] ?? "") &&
+          Number.isSafeInteger(Number(process.env[k])),
+      )
+        ? {
+            version: process.env.RATE_VERSION,
+            seatMinor: Number(process.env.RATE_SEAT_MINOR),
+            slabMinor: Number(process.env.RATE_SLAB_MINOR),
+            gbMinor: Number(process.env.RATE_GB_MINOR),
+          }
+        : undefined,
   };
 }

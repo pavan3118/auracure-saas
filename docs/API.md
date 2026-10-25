@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 4 implementation is under review.**
+> **Specification baseline approved by the user; Phase 5 local/sandbox implementation is under review; production activation gates remain open.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE5-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # API specification
 
@@ -136,3 +136,21 @@ The concrete Phase 4 API in PHASE4-CONTRACT.md supersedes earlier proposed paths
 | Sign/verify/release | POST /lab/results/:id/sign, /verify, /release | LAB + six-digit signoff_pin; requesting DOCTOR + password; LAB explicit release |
 
 Lists are bounded to 100; patients retain existing search/cursor pagination. No arbitrary query/filter/tenant selector is accepted. Invoice lines require description, quantity, unit_price and tax_percent. Close requires expected_version, counted_cash and variance_reason if different. Review requires expected_version, review_note and mfa_proof. Result bodies require observations with name/value, optional unit/reference_interval/comments and overall comments; new signed-result revisions require correction_reason. Stale state/version/stock/overpayments return conflicts, invalid amounts/missing quantities return validation errors; inaccessible resources return 404.
+
+## Phase 5 implemented API
+
+| Endpoint under /api/v1 | Boundary |
+| --- | --- |
+| POST /auth/patient-activation-requests | Generic public request using facility_subdomain + existing registered login; shared IP/contact rate limits |
+| POST /auth/patient-activation | Single-use random token + four-digit portal_pin; no submitted tenant or patient authority |
+| GET /portal | Verified PATIENT; linked profile and own recent operational/released records only |
+| POST /portal/documents | PATIENT, strict kind/source_id, retry key bound to authorized source, 20 requests/15 min; immutable-source semantic deduplication |
+| GET /portal/documents/:id/download | PATIENT ownership plus fresh source authorization; authenticated application/pdf attachment, no public grants/URLs |
+| GET /platform/usage?month=YYYY-MM | OWNER; exact consultation count/slabs, observed seat/storage usage, coverage/reconciliation, wallet and unconfigured-price status |
+| POST /platform/usage/snapshot | OWNER; records this UTC day's first observation only, never a caller-selected historical date |
+| GET/POST /platform/messages | OWNER; nonproduction fixed-template fixture queue; registered verified mobile only, strict patient_id/channel body |
+| POST /platform/wallet/test-credits | OWNER + fresh MFA + retry key; explicit test units only, disabled in production |
+| POST /platform/bills/preview | OWNER + retry key; closed, fully observed/reconciled month and explicit configured rates; never charges money |
+| POST /providers/sandbox/message or /bill | Nonproduction raw-body HMAC + five-minute timestamp tolerance; reference resolves stored tenant resource, tenant_id rejected |
+
+Sandbox-Signature is t=<Unix seconds>,v1=<HMAC-SHA256(secret, t + '.' + raw body)>; secret is at least 32 random characters. Strict fixture callback body is event_id/reference/status. Message status is DELIVERED/FAILED; bill is PAID/FAILED. Duplicate event IDs with identical bytes return duplicate success; changed content conflicts; terminal outcomes cannot reverse. This protocol belongs to the local adapter, not Stripe/Twilio. Production callbacks fail closed. Existing patient OTP and recovery remain purpose-bound; mobile delivery is development-local only until a real messaging provider is configured.

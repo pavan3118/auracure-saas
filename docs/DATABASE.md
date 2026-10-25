@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 4 implementation is under review.**
+> **Specification baseline approved by the user; Phase 5 local/sandbox implementation is under review; production activation gates remain open.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE5-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # Database specification
 
@@ -90,3 +90,17 @@ All new collections require tenant_id and use scoped repositories. Actual code u
 | LabResult | order/visit/patient/doctor, revision, manual observations, correction reason, sign/verify/release identities/times, contentHash | unique tenant + orderId + revision; unique tenant + operationKey; draft-only content edits |
 
 Tenant.invoiceSequence increments within invoice issuance. CashSession adds receipt total/version and OPEN/CLOSED/REVIEWED snapshots; old OPEN floats lacking new fields are treated as zero receipts/version zero and safely upgraded on mutation. LabOrder adds version/currentResultId and the processing states. Old orders start at version zero without destructive backfill. Monetary values and dispensing counts must remain safe integers; amount arithmetic uses BigInt before conversion.
+
+## Phase 5 concrete collections
+
+| Model | Content | Constraints |
+| --- | --- | --- |
+| DocumentRecord | patient/kind/source, immutable sourceHash, opaque private storageKey, SHA-256 checksum, sizeBytes | unique tenant + kind + sourceId + sourceHash; no storage path in HTTP responses |
+| DailyUsage | day, observedAt, active DOCTOR count, retained document metadata bytes | unique tenant + UTC day; immutable first observation, no historical backfill |
+| Wallet | integer balance, held/reserved units, version | one per tenant; safe nonnegative guarded updates |
+| WalletEntry | TEST_CREDIT/DEBIT/REFUND, units, actor, durable source | unique tenant + source; append-only |
+| MessageJob | linked patient, registered recipient, fixed template/channel, encrypted pending body, opaque provider reference/state/cost, attempts/nextAttempt claim and backoff | unique provider reference; unique tenant + durable operation key/fingerprint; body cleared on acceptance |
+| ProviderEvent | event ID, stored provider reference, raw payload hash, status | globally unique provider fixture event ID; tenant-bound lookup; no clinical/provider raw body retained |
+| PlatformBill | month, fixture provider reference, quote hash, amount/rate version, PREVIEW/PAID/FAILED | unique provider reference; tenant/month/rate and durable operation constraints; test-only |
+
+Challenge adds PATIENT_ACTIVATE with existing hash/expiry/single-use controls. Activation serializes per user, verifies the dormant linked account and invalidates old sessions/challenges. The scoped repository adds only an internally validated numeric sum field; its aggregate starts with the immutable tenant match. Usage aggregations include all matching events, independent of display page limits. Narrow worker/provider resolvers return tenant/opaque IDs only; arbitrary unscoped domain querying remains unavailable.

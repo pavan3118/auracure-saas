@@ -1,7 +1,7 @@
-> **Specification baseline approved by the user; Phase 4 implementation is under review.**
+> **Specification baseline approved by the user; Phase 5 local/sandbox implementation is under review; production activation gates remain open.**
 > Sources: uploaded PRD v7 sections 1–4, the user's five-point decisions, and the approved draft specifications.
 > Original `ASSUMPTION - needs approval` labels remain as provenance for the approved proposals; they do not record a second pending approval. Changes to that baseline are identified in PHASE1-REVIEW.md.
-> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE4-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
+> Original PRD statements override assumptions. Current implementation evidence and external blockers are recorded in PHASE5-REVIEW.md (earlier reviews retain historical evidence); planned later-phase APIs are not implemented merely because they appear in these documents.
 
 # AuraCare — completed PRD draft
 
@@ -135,3 +135,9 @@ The user approved complaint and assessment as required at consultation completio
 ## Phase 4 approved decisions and implementation
 
 The user explicitly authorized Phase 4 and approved its INR invoice/tax/receipt rules, full FEFO dispensing and doctor-approved substitutions, lab sign-off/verification/release, and owner-reviewed cash close. These decisions refine A04/A05/A06/A12; the original uploaded baseline remains authoritative. PHASE4-CONTRACT.md specifies the implemented endpoint and state contracts; PHASE4-REVIEW.md records validation and limits. Patient portal UI, external messaging, SaaS subscription prices/provider charges, refunds and deployment remain outside this phase.
+
+## Phase 5 local/sandbox delivery and remaining decisions
+
+The user's “phase 5” authorizes A16–A21 implementation. The patient portal now provides contact-proof activation and chosen four-digit PIN, own profile/visits/signed prescriptions/current released results/issued invoices/receipts and private PDF copies. It excludes raw consultation notes/vitals, staff management, family access and contact changes. Owner usage reports all four meters and explicit coverage/reconciliation; unconfigured prices remain unconfigured and charges are always disabled. Messaging/billing fixtures are deterministic local adapters with authenticated replay-safe callbacks, not externally verified Stripe/Twilio integrations. PHASE5-CONTRACT.md and PHASE5-REVIEW.md distinguish implemented local behavior from production gates.
+
+**ASSUMPTION - needs approval:** first-observation-per-UTC-day seat/storage sampling refines the approved daily accounting proposal; production charging needs agreement on that exact convention. **ASSUMPTION - needs approval:** one synthetic wallet credit per accepted local test message; real channel prices/funding remain undefined. Legal/residency/retention/RPO/RTO, real provider accounts and production activation remain undecided and disabled.
