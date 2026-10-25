@@ -24,6 +24,11 @@ export interface Visit extends Row {
   version: number;
   checkInKey: string;
   requestHash: string;
+  claimedAt: Date | null;
+  completedAt: Date | null;
+  claimKey: string;
+  completionKey: string;
+  completionRequestHash: string;
   cancelledBy: string;
   cancellationReason: string;
 }
@@ -88,6 +93,11 @@ export const visitSchema = make({
   version: { type: Number, default: 0 },
   checkInKey: { type: String, required: true },
   requestHash: { type: String, required: true },
+  claimedAt: { type: Date, default: null },
+  completedAt: { type: Date, default: null },
+  claimKey: { type: String },
+  completionKey: { type: String },
+  completionRequestHash: { type: String },
   cancelledBy: { type: String, default: "" },
   cancellationReason: { type: String, default: "" },
 });
@@ -100,6 +110,20 @@ visitSchema.index(
     unique: true,
     partialFilterExpression: { state: { $in: ["QUEUED", "IN_CONSULTATION"] } },
   },
+);
+visitSchema.index(
+  { tenant_id: 1, doctorId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      state: "IN_CONSULTATION",
+      doctorId: { $gt: "" },
+    },
+  },
+);
+visitSchema.index(
+  { tenant_id: 1, claimKey: 1 },
+  { unique: true, partialFilterExpression: { claimKey: { $type: "string" } } },
 );
 export const vitalsSchema = make({
   visitId: { type: String, required: true },

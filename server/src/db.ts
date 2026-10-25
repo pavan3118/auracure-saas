@@ -1,3 +1,17 @@
+import {
+  noteSchema,
+  amendmentSchema,
+  prescriptionSchema,
+  labOrderSchema,
+  serviceOrderSchema,
+  usageSchema,
+  type Note,
+  type Amendment,
+  type Prescription,
+  type LabOrder,
+  type ServiceOrder,
+  type UsageEvent,
+} from "./modules/doctor/models.js";
 import "./config/dns.js";
 import {
   patientSchema,
@@ -283,9 +297,26 @@ class Scoped<T extends Row> {
     });
     return d!.toObject();
   }
+  private protectScope(update: UpdateQuery<T>) {
+    check(!Array.isArray(update), 500, "SCOPE_IMMUTABLE");
+    const protectedPath = (path: string) =>
+      path.split(".").includes("tenant_id");
+    for (const [operator, value] of Object.entries(update)) {
+      if (!operator.startsWith("$")) {
+        check(!protectedPath(operator), 500, "SCOPE_IMMUTABLE");
+        continue;
+      }
+      if (value && typeof value === "object")
+        for (const [field, target] of Object.entries(value)) {
+          check(!protectedPath(field), 500, "SCOPE_IMMUTABLE");
+          if (operator === "$rename" && typeof target === "string")
+            check(!protectedPath(target), 500, "SCOPE_IMMUTABLE");
+        }
+    }
+  }
   update(q: FilterQuery<T>, u: UpdateQuery<T>, session?: ClientSession) {
     // Tenant identity is immutable, including through operator updates.
-    check(!JSON.stringify(u).includes("tenant_id"), 500, "SCOPE_IMMUTABLE");
+    this.protectScope(u);
     return this.model
       .findOneAndUpdate(this.filter(q), u, {
         new: true,
@@ -296,11 +327,17 @@ class Scoped<T extends Row> {
       .exec();
   }
   updateMany(q: FilterQuery<T>, u: UpdateQuery<T>, session?: ClientSession) {
-    check(!JSON.stringify(u).includes("tenant_id"), 500, "SCOPE_IMMUTABLE");
+    this.protectScope(u);
     return this.model.updateMany(this.filter(q), u, { session }).exec();
   }
 }
 export class Database {
+  private notesModel;
+  private amendmentsModel;
+  private prescriptionsModel;
+  private labOrdersModel;
+  private serviceOrdersModel;
+  private usageModel;
   private patientsModel;
   private visitsModel;
   private vitalsModel;
@@ -319,6 +356,24 @@ export class Database {
       "Operation",
       operationSchema,
     );
+    this.notesModel = connection.model<Note>("ConsultationNote", noteSchema);
+    this.amendmentsModel = connection.model<Amendment>(
+      "NoteAmendment",
+      amendmentSchema,
+    );
+    this.prescriptionsModel = connection.model<Prescription>(
+      "Prescription",
+      prescriptionSchema,
+    );
+    this.labOrdersModel = connection.model<LabOrder>(
+      "LabOrder",
+      labOrderSchema,
+    );
+    this.serviceOrdersModel = connection.model<ServiceOrder>(
+      "ServiceOrder",
+      serviceOrderSchema,
+    );
+    this.usageModel = connection.model<UsageEvent>("UsageEvent", usageSchema);
     this.patientsModel = connection.model<Patient>("Patient", patientSchema);
     this.visitsModel = connection.model<Visit>("Visit", visitSchema);
     this.vitalsModel = connection.model<Vitals>("Vitals", vitalsSchema);
@@ -347,6 +402,24 @@ export class Database {
       ),
     );
     this.rates.schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  }
+  notes(t: string) {
+    return new Scoped(this.notesModel, t);
+  }
+  amendments(t: string) {
+    return new Scoped(this.amendmentsModel, t);
+  }
+  prescriptions(t: string) {
+    return new Scoped(this.prescriptionsModel, t);
+  }
+  labOrders(t: string) {
+    return new Scoped(this.labOrdersModel, t);
+  }
+  serviceOrders(t: string) {
+    return new Scoped(this.serviceOrdersModel, t);
+  }
+  usage(t: string) {
+    return new Scoped(this.usageModel, t);
   }
   patients(t: string) {
     return new Scoped(this.patientsModel, t);
@@ -489,6 +562,16 @@ export class Database {
       .findOne({ registrationKeyHash: keyHash })
       .lean()
       .exec();
+  }
+  async checkLimit(key: string, max: number, windowMs: number) {
+    const bucket = Math.floor(Date.now() / windowMs);
+    const entry = await this.rates.findOne({ _id: `${key}:${bucket}` }).lean();
+    check(
+      (entry?.count ?? 0) < max,
+      429,
+      "RATE_LIMITED",
+      "Too many failed verification attempts. Try again later.",
+    );
   }
   async limit(key: string, max: number, windowMs: number) {
     const bucket = Math.floor(Date.now() / windowMs);

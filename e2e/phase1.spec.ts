@@ -76,7 +76,9 @@ test("real owner onboarding, MFA, Screen 07 invitation and doctor access", async
     .fill("a secure doctor browser password");
   await doctor.getByRole("button", { name: "Accept invitation" }).click();
   await expect(
-    doctor.getByRole("heading", { name: "Welcome, Doctor." }),
+    doctor.getByRole("heading", {
+      name: "Ready for your next patient, Doctor?",
+    }),
   ).toBeVisible();
   await expect(
     doctor.getByRole("button", { name: "Team & access" }),
@@ -89,7 +91,9 @@ test("real owner onboarding, MFA, Screen 07 invitation and doctor access", async
   await doctor.screenshot({ path: ".local/phase1-mobile.png", fullPage: true });
   await doctor.reload();
   await expect(
-    doctor.getByRole("heading", { name: "Welcome, Doctor." }),
+    doctor.getByRole("heading", {
+      name: "Ready for your next patient, Doctor?",
+    }),
   ).toBeVisible();
   await doctor.getByRole("button", { name: "Sign out" }).click();
   await expect(

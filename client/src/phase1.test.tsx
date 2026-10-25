@@ -235,6 +235,9 @@ describe("Phase 1 accessible user journeys", () => {
         type: "CLINIC",
       },
     };
+    mocks.api.mockImplementation(async (_method: string, path: string) =>
+      path === "/doctor/workspace" ? { active: null, queued_count: 0 } : [],
+    );
     page(<Workspace />);
     expect(
       screen.queryByRole("button", { name: "Team & access" }),
@@ -242,11 +245,17 @@ describe("Phase 1 accessible user journeys", () => {
     expect(
       screen.queryByRole("button", { name: "Audit trail" }),
     ).not.toBeInTheDocument();
-    expect(mocks.api).not.toHaveBeenCalled();
+    await screen.findByText("No assigned encounters yet.");
     expect(
-      screen.getByText(
-        "Reception is available in the live workspace. Doctor, pharmacy and laboratory workflows follow in later phases.",
+      mocks.api.mock.calls.every(
+        ([, path]) =>
+          !["/staff", "/staff/invitations", "/audit-events"].includes(path),
       ),
+    ).toBe(true);
+    expect(
+      screen.getByRole("heading", {
+        name: "Ready for your next patient, Alex?",
+      }),
     ).toBeInTheDocument();
   });
 });

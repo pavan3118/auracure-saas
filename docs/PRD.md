@@ -127,3 +127,7 @@ Decide specifically whether the public verification/login/recovery routes propos
 ## Phase 2 approved implementation decisions
 
 The user approved full name, a unique email or international mobile contact, optional birth date, and optional temperature °C, paired systolic/diastolic mmHg, pulse bpm, SpO₂ %, weight kg and height cm. The user selected INR. These decisions resolve the reception field/unit and opening-float currency questions for A03/A12. No diagnostic thresholds, consent language or family-access model is inferred. See PHASE2-REVIEW.md for the implemented scope and deferred Phase 4 reconciliation.
+
+## Phase 3 approved clinical field decisions
+
+The user approved complaint and assessment as required at consultation completion, optional plan, and manually entered prescription medicine/strength/dose/route/frequency/duration with optional quantity/instructions. The user also approved manual test/service names, optional clinical instructions and the assigned doctor's current password for signing reauthentication. No catalogue, automated dosing or legal signature certification is assumed. See PHASE3-CONTRACT.md and PHASE3-REVIEW.md for the technical contract and evidence. Discarded unsigned drafts are retained administratively; signed revisions and completed notes remain immutable, with explicit revisions/amendments.

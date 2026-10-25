@@ -73,3 +73,9 @@ The environment draft now additionally includes *.mongodb.net as explicitly requ
 Socket.io runs on the same API HTTP server; local Vite proxies /socket.io with WebSocket support. Deployments must route that path and set the exact APP_ORIGIN. No new secret is required. New patient/visit/vitals/cash/retry indexes are created additively by the existing database initialization. Single-process live delivery is tested; production multi-instance fan-out requires the shared adapter work.
 
 `npm run test:e2e` now starts its own disposable memory-server replica set and supervised API/frontend, with SMTP disabled and synthetic mailbox delivery. It refuses to reuse an existing application on port 5173; stop your own dev instance first or use a separate environment. Test startup does not read Atlas credentials into its database connection. Graceful shutdown stops owned app process groups before the disposable replica set. Test screenshots are ignored synthetic artifacts under .local/.
+
+## Phase 3 runtime
+
+No new runtime dependency, external service or secret is required. Apply the additive clinical and active-doctor/usage indexes with the existing database startup/index workflow. Doctor sessions obtain only assigned encounters; the 120-second prescription lease is explicitly acquired and renewed by the editing session. Password confirmation uses existing protected credentials and is never printed or stored in retry/audit records. Clinical usage records count completed encounters only; prices and actual billing remain unconfigured.
+
+The three isolated browser journeys now cover onboarding, reception and doctor workflows, including explicit signing and an append-only correction. Read PHASE3-REVIEW.md before testing with synthetic data. The user-reported Atlas DNS fix and private server/.env are unchanged; this phase does not retry Atlas automatically. Phase 4 processing remains gated.

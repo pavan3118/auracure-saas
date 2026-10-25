@@ -1,6 +1,6 @@
 # AuraCare
 
-Multi-tenant clinic workspace. Phase 1 provides verified onboarding, owner TOTP, staff credentials and tenant isolation. Phase 2 adds patient registration/search, check-in, vitals history, a live queue and INR opening floats. Clinical work, stock, payments and final cash reconciliation remain later phases.
+Multi-tenant clinic workspace. Phase 1 provides verified onboarding, owner TOTP, staff credentials and tenant isolation. Phase 2 adds patient registration/search, check-in, vitals history, a live queue and INR opening floats. Phase 3 adds the assigned doctor workspace, consultation notes, leased prescription drafts/signing/revisions, test/service orders and completion metering. Stock, result processing, payments and final cash reconciliation remain later phases.
 
 ## Development
 
@@ -29,3 +29,5 @@ Atlas is reported verified by the user on their own machine; cloud-side DNS rema
 `npm run db:ping` works from either the root or server directory, loads ignored `server/.env` and reports success or a credential-redacted connection error. The private environment file is not included in Git; recreate it through secure configuration on another machine. Run `npm test` to continue Phase 1 independently of Atlas.
 
 See [Phase 2 review](docs/PHASE2-REVIEW.md) for approved fields, test evidence, account activation limits and cash deferrals. Browser tests now provision an isolated replica set and stop their own services; no running development app is reused.
+
+See [Phase 3 review](docs/PHASE3-REVIEW.md) and [clinical contract](docs/PHASE3-CONTRACT.md). Prescription fields are manually entered; no drug catalogue or dosing/safety recommendation is supplied. Signing creates an authenticated immutable clinical revision, not an externally certified digital-signature service.

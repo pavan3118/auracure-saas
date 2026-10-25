@@ -40,3 +40,7 @@ Nine draft specifications exist. No application dependencies installed, no appli
 ## Phase 2 checkpoint
 
 The user tested Phase 1, reported the MongoDB DNS issue resolved and authorized NEXT PHASE. Phase 2 reception is implemented; see PHASE2-REVIEW.md for exact approved fields, evidence and deferred cash reconciliation. CodeRabbit authentication remains an external prerequisite. Stop for Phase 2 review; do not start Phase 3 until NEXT PHASE.
+
+## Phase 3 checkpoint
+
+Phase 3 was explicitly authorized and its open clinical field/signing/order questions approved by the user. The doctor workspace, prescribing lifecycle, completion metering and append-only corrections are implemented. See PHASE3-REVIEW.md for checks and limits. Stop for review; Phase 4 remains gated by NEXT PHASE.

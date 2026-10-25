@@ -114,3 +114,7 @@ Vitals codes/units: TEMPERATURE/°C, SYSTOLIC_BP/mmHg, DIASTOLIC_BP/mmHg, PULSE/
 Socket.io uses its standard /socket.io transport path with auth.token and exact permitted Origin. After authenticated connection, queue.updated contains {visit_id,state,version} only; clients refetch authorized queue data. Client-supplied tenant rooms are not supported. Vite proxies this WebSocket path to the API during local development.
 
 Cash closing/review, payments, clinical claim-next/completion and patient-record portal APIs stay deferred to their approved later phases. Phase 2 records the opening float, not a completed cash ledger.
+
+## Phase 3 implementation
+
+The Phase 3 endpoints in PHASE3-CONTRACT.md are now implemented. That contract adds the assigned doctor workspace/history, consultation saves, explicit 120-second session-bound draft leases, password-confirmed signing, retained unsigned draft discard, correction revisions, lab/service order creation, completion and append-only post-completion note amendments. All use the existing JWT/purpose/role guards, strict schemas and request/error envelopes. Read projections and retry semantics are detailed in PHASE3-REVIEW.md. No pharmacy dispense, lab result, payment or final cash-close API is exposed.

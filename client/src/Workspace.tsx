@@ -1,3 +1,4 @@
+import { Doctor } from "./Doctor";
 import { Reception } from "./Reception";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -42,8 +43,14 @@ export function Workspace() {
   const auth = useAuth(),
     me = auth.me!;
   const [page, setPage] = useState<
-      "overview" | "staff" | "audit" | "reception"
-    >(me.user.role === "RECEPTIONIST" ? "reception" : "overview"),
+      "overview" | "staff" | "audit" | "reception" | "doctor"
+    >(
+      me.user.role === "RECEPTIONIST"
+        ? "reception"
+        : me.user.role === "DOCTOR"
+          ? "doctor"
+          : "overview",
+    ),
     [users, setUsers] = useState<User[]>([]),
     [invites, setInvites] = useState<Invitation[]>([]),
     [events, setEvents] = useState<AuditEvent[]>([]),
@@ -103,6 +110,15 @@ export function Workspace() {
             >
               <Activity size={19} />
               {me.user.role === "RECEPTIONIST" ? "Reception" : "Live queue"}
+            </button>
+          )}
+          {me.user.role === "DOCTOR" && (
+            <button
+              className={page === "doctor" ? "selected" : ""}
+              onClick={() => setPage("doctor")}
+            >
+              <ClipboardList size={19} />
+              Doctor workspace
             </button>
           )}
           {owner && (
@@ -172,6 +188,7 @@ export function Workspace() {
             </div>
           )}
           {page === "reception" && <Reception />}
+          {page === "doctor" && <Doctor />}
           {page === "overview" && (
             <>
               <div className="heading-row">
@@ -632,7 +649,7 @@ export function Workspace() {
             )}
           <footer className="workspace-footer">
             AuraCare · Facility workspace
-            <span>Phase 2 — Reception & patient services</span>
+            <span>Phase 3 — Doctor & consultation services</span>
           </footer>
         </main>
       </div>

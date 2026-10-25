@@ -1278,3 +1278,242 @@ td small {
     font-size: 22px;
   }
 }
+.field textarea {
+  font: inherit;
+  font-weight: 400;
+  font-size: 14px;
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #d6dfe5;
+  border-radius: 8px;
+  color: #172b36;
+  background: white;
+  line-height: 1.65;
+}
+.field textarea:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}
+.call-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.call-next h2 {
+  font-size: 18px;
+}
+.call-next p {
+  margin-bottom: 0;
+  font-size: 13px;
+  max-width: 620px;
+}
+.patient-context h2 {
+  font-size: 26px;
+}
+.patient-context p {
+  font-size: 12px;
+  margin-bottom: 0;
+}
+.doctor-vitals {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #edf1f3;
+  padding-top: 20px;
+}
+.doctor-vitals h3 {
+  font-size: 12px;
+  margin: 0 12px 0 0;
+}
+.doctor-vitals > span {
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #f3f7f8;
+  border-radius: 8px;
+  font-size: 10px;
+  color: #526571;
+}
+.doctor-vitals strong {
+  font-size: 14px;
+  color: #172b36;
+}
+.clinical-summary h3 {
+  font-size: 12px;
+  color: #526571;
+  margin-top: 20px;
+}
+.clinical-summary p,
+.clinical-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.clinical-summary time {
+  font-size: 11px;
+  color: #708490;
+}
+.amendment {
+  padding: 15px 0;
+  border-bottom: 1px solid #edf1f3;
+}
+.clinical-section {
+  margin: 32px 0 16px;
+  align-items: center;
+}
+.clinical-section h2 {
+  margin: 0;
+}
+.prescription-panel .badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.editor-toolbar {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+}
+.editor-toolbar > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.editor-toolbar p {
+  margin-bottom: 0;
+  max-width: 700px;
+}
+.editor-toolbar .text-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.medicine-line {
+  background: #fafcfc;
+  border: 1px solid #e2e8ed;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 18px 0;
+}
+.medicine-line h3 {
+  font-size: 13px;
+}
+.medicine-line .panel-heading {
+  margin-bottom: 8px;
+}
+.prescription-notes {
+  margin-top: 22px;
+}
+.signature-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid #e2e8ed;
+  padding-top: 22px;
+  margin-top: 24px;
+}
+.signature-box h3 {
+  font-size: 15px;
+}
+.signature-box p {
+  font-size: 12px;
+  margin-bottom: 0;
+}
+.medicine-summary article {
+  padding: 18px 0;
+  border-bottom: 1px solid #edf1f3;
+}
+.medicine-summary strong {
+  font-size: 14px;
+}
+.medicine-summary p {
+  font-size: 13px;
+  margin: 8px 0;
+}
+.medicine-summary small {
+  font-size: 11px;
+  color: #526571;
+}
+.clinical-orders {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.clinical-orders article {
+  background: #f6f9fa;
+  border: 1px solid #e2e8ed;
+  border-radius: 8px;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+.clinical-orders .badge {
+  width: fit-content;
+}
+.clinical-orders strong {
+  font-size: 13px;
+}
+.clinical-orders p {
+  font-size: 12px;
+  margin: 6px 0;
+}
+.completion-panel .panel-heading {
+  align-items: center;
+}
+.completion-panel p {
+  font-size: 12px;
+  margin-bottom: 0;
+}
+.empty-clinical {
+  text-align: center;
+  padding: 50px 24px;
+  color: #526571;
+}
+.empty-clinical > svg {
+  margin-bottom: 20px;
+}
+.empty-clinical h2 {
+  color: #172b36;
+}
+.doctor-workspace .panel > form {
+  margin-top: 20px;
+}
+.doctor-workspace .status-chip {
+  max-width: 200px;
+}
+@media (max-width: 760px) {
+  .call-next,
+  .signature-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .call-next .button,
+  .signature-box .button {
+    width: 100%;
+  }
+  .patient-context .panel-heading,
+  .completion-panel .panel-heading {
+    flex-wrap: wrap;
+  }
+  .editor-toolbar .button {
+    font-size: 10px;
+    padding: 10px;
+  }
+  .medicine-line {
+    padding: 16px;
+  }
+  .doctor-workspace .stat-card strong {
+    max-width: 180px;
+    font-size: 20px;
+  }
+  .doctor-workspace .heading-row {
+    gap: 10px;
+  }
+}

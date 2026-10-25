@@ -91,3 +91,11 @@ See PHASE2-REVIEW.md for route projections. OWNERS receive operational patient n
 Check-in creates a dormant account with an undisclosed random, peppered/hashed PIN and unverified contact. Patient login now explicitly rejects unverified contacts; a guessed PIN cannot activate such an account. Activation/WhatsApp delivery is a later-phase ownership-verification flow. Contact edits cannot bypass it. Audits contain actor/resource IDs and action/outcome, never patient bodies, vitals or the cancellation free text. Production access logs must likewise avoid search-query/contact values.
 
 Live subscriptions verify JWT purpose, audience, role, tenant and server-side session. Every emitted notice revalidates authorization; a five-second check also disconnects revoked sessions. Expiry closes the socket. Notices carry no names/contact/vitals; clients refetch permitted HTTP projections.
+
+## Phase 3 clinical authorization
+
+Only an assigned DOCTOR can manage an active encounter, prescribe, order tests/services, complete it or append an audited correction. The full JWT tenant/session/credential context is required; owning the facility grants no clinical bypass. Prescription editing additionally requires the current optimistic version and a 120-second lease bound to doctor and authenticated session. Session expiry/revocation prevents further use of that lease through the normal authorization guard.
+
+Signing and post-completion amendments require the doctor's current password. The transaction checks that credential version, password hash, status and DOCTOR role still match before writing. Only failed password proofs consume the five-failure / 15-minute reauthentication counter, and failures are audited. Password proofs are not stored in idempotency hashes, audit events or clinical content hashes. Signed prescriptions cannot be modified/discarded; corrections produce a linked new draft, and finalized notes accept separate immutable amendments.
+
+PHARMACIST may read a signed prescription projection; PATIENT must additionally match the linked patient user ID. Draft/discarded revisions and unrelated same-tenant patients remain inaccessible. LAB order projections contain requested tests/instructions only, not complaint/assessment/plan. Clinical bodies and passwords never appear in live queue notices.
