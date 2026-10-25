@@ -1080,3 +1080,201 @@ td small {
     scroll-behavior: auto !important;
   }
 }
+.reception-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #d6dfe5;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+.reception-tabs button {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  padding: 15px 18px;
+  color: #526571;
+  font-size: 12px;
+  min-height: 48px;
+}
+.reception-tabs button[aria-selected="true"] {
+  border-bottom-color: #102a38;
+  color: #102a38;
+  font-weight: 650;
+}
+.reception-stats strong {
+  font-size: 25px;
+}
+.patient-search fieldset {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  position: relative;
+  align-items: end;
+}
+.patient-search .field {
+  margin-bottom: 0;
+}
+.patient-search .button {
+  margin: 0;
+  min-width: 140px;
+  height: 46px;
+}
+.patient-search fieldset > svg {
+  display: none;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 24px 0;
+}
+.queue-ticket {
+  font-weight: 700;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.danger-text {
+  color: #b91c1c;
+}
+.queue-limit {
+  padding: 0 24px;
+  margin: 15px 0 0;
+}
+.muted-status i {
+  background: #92400e;
+}
+.muted-status {
+  color: #526571;
+}
+.cash-records {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.cash-record {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px;
+  background: #f6f9f9;
+  border: 1px solid #dce5e8;
+  border-radius: 8px;
+}
+.cash-record > svg {
+  color: #526571;
+}
+.cash-record > div {
+  display: grid;
+  gap: 7px;
+  flex: 1;
+}
+.cash-record span {
+  font-size: 11px;
+  color: #526571;
+}
+.cash-record strong {
+  font-size: 27px;
+  font-weight: 600;
+}
+.cash-record small {
+  font-size: 11px;
+  color: #708490;
+}
+.vitals-history {
+  margin-top: 26px;
+  border-top: 1px solid #e2e8ed;
+  padding-top: 20px;
+}
+.vitals-history h3 {
+  font-size: 14px;
+}
+.vitals-history article {
+  padding: 14px 0;
+  border-bottom: 1px solid #edf1f3;
+}
+.vitals-history time {
+  font-size: 11px;
+  color: #708490;
+}
+.vitals-history article > div {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.vitals-history span {
+  font-size: 12px;
+  background: #f3f7f8;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.vitals-history strong {
+  font-weight: 650;
+}
+.reception .panel > .panel-heading p {
+  margin: 8px 0 0;
+}
+.reception .panel > p {
+  font-size: 13px;
+  max-width: 740px;
+}
+.reception .form-grid + button {
+  width: auto;
+  min-width: 180px;
+}
+.reception .field input {
+  min-width: 0;
+}
+.reception .panel .button {
+  white-space: nowrap;
+}
+.reception .status-chip {
+  font-size: 9px;
+  max-width: 250px;
+  white-space: normal;
+}
+@media (max-width: 760px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .patient-search fieldset {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .patient-search .button {
+    width: 100%;
+  }
+  .reception .panel-heading {
+    flex-wrap: wrap;
+  }
+  .reception-tabs button {
+    padding: 14px 10px;
+    font-size: 11px;
+  }
+  .reception .heading-row {
+    gap: 12px;
+  }
+  .reception .status-chip {
+    margin: 0;
+  }
+  .reception-stats strong {
+    font-size: 21px;
+  }
+  .cash-record {
+    padding: 16px;
+    gap: 12px;
+  }
+  .cash-record strong {
+    font-size: 22px;
+  }
+}

@@ -1,3 +1,6 @@
+import { createServer } from "node:http";
+import { QueueEvents } from "./modules/reception/events.js";
+import { liveQueue } from "./modules/reception/live.js";
 import "dotenv/config";
 import { loadConfig } from "./config.js";
 import { connect } from "./db.js";
@@ -8,8 +11,12 @@ async function main() {
   const config = await loadConfig(),
     db = await connect(config.mongoUri),
     mail = mailer(config);
-  const app = await createApp(await Identity.create(db, config, mail));
-  const server = app.listen(config.port, "0.0.0.0", () =>
+  const identity = await Identity.create(db, config, mail),
+    events = new QueueEvents();
+  const app = await createApp(identity, events.publish);
+  const server = createServer(app);
+  const sockets = liveQueue(server, identity, events);
+  server.listen(config.port, "0.0.0.0", () =>
     console.log(`AuraCare API listening on port ${config.port}`),
   );
   let busy = false;
@@ -26,6 +33,7 @@ async function main() {
   }, 1000);
   async function stop() {
     clearInterval(worker);
+    await sockets.close();
     server.close(async () => {
       await db.connection.close();
       process.exit(0);

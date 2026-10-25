@@ -1,6 +1,6 @@
 # AuraCare working rules
 
-- Read docs/PRD.md, docs/Authentication & Security.md and docs/PHASE1-REVIEW.md before changing behavior. PRD baseline and explicit user decisions override original assumptions.
+- Read docs/PRD.md, docs/Authentication & Security.md and docs/PHASE1-REVIEW.md and docs/PHASE2-REVIEW.md before changing behavior. PRD baseline and explicit user decisions override original assumptions.
 - Keep the six tenant roles exact. SYSTEM_ADMIN is platform-only and has no tenant API bypass.
 - Derive tenant scope from verified JWTs. Use scoped repositories; do not export raw domain models or accept client tenant_id fields. Public auth/bootstrap routes must use their documented proof boundary.
 - Passwords/PINs are hashed; TOTP secrets are encrypted. Never log/upload secrets, clinical details or the uploaded credential file. .local/ and .env files stay ignored.

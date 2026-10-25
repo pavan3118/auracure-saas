@@ -1,28 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { readdir, readFile, mkdir } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import * as OTPAuth from "otpauth";
-async function mailbox(to: string, subject: string) {
-  let body = "";
-  await expect
-    .poll(
-      async () => {
-        for (const name of await readdir(".local/mail").catch(() => [])) {
-          const item = JSON.parse(
-            await readFile(`.local/mail/${name}`, "utf8"),
-          ) as { to: string; subject: string; body: string };
-          if (item.to === to && item.subject === subject) {
-            body = item.body;
-            return true;
-          }
-        }
-        return false;
-      },
-      { timeout: 15000 },
-    )
-    .toBe(true);
-  return body;
-}
+import { mailbox } from "./mailbox.js";
 test("real owner onboarding, MFA, Screen 07 invitation and doctor access", async ({
   page,
   browser,

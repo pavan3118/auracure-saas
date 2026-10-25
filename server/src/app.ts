@@ -1,3 +1,5 @@
+import { receptionRoutes } from "./modules/reception/routes.js";
+import type { QueuePublisher } from "./modules/reception/service.js";
 import express, {
   type Request,
   type Response,
@@ -40,7 +42,7 @@ const subdomain = z
 const secret = z.string().min(1).max(1024);
 const id = z.string().uuid();
 type Context = { p: Principal; requestId: string };
-export async function createApp(identity: Identity) {
+export async function createApp(identity: Identity, publish?: QueuePublisher) {
   const app = express();
   const db = identity.db,
     c = identity.config;
@@ -612,6 +614,7 @@ export async function createApp(identity: Identity) {
       );
     }),
   );
+  receptionRoutes(app, identity, { guard, route, data, ctx }, publish);
   app.use((_req, _res, next) => next(new AppError(404, "NOT_FOUND")));
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
     let e: AppError;

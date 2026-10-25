@@ -83,3 +83,11 @@ The user approved this specification after reviewing its proposals, including th
 Phase 1 implements password credentials for staff, owner TOTP/recovery codes, separate peppered lab sign-off PIN hashing, patient portal PIN authentication and a development-only OTP adapter. Receptionists use the PRD's strong-password option; shift PIN/device policy is not enabled. Licence verification records an owner's evidence reference, not an automated regulator verification. PIN reset for patients uses verified contact recovery; lab sign-off PIN reset and operator-assisted lost-MFA recovery are not exposed yet. No fallback bypasses MFA.
 
 Recovery/OTP requests serialize on a per-user challenge version so concurrent requests cannot leave multiple outstanding active grants. Invitations serialize on tenant governance metadata; limited provisioning actors cannot invalidate an OWNER-approved invitation. Final-owner changes use a tenant governance counter to serialize concurrent demotions. Failed transactions roll back code consumption and audits together.
+
+## Phase 2 security record
+
+See PHASE2-REVIEW.md for route projections. OWNERS receive operational patient names/IDs without contacts, birth dates or vitals; doctors need an assigned visit to read a patient or vitals. PATIENT detail checks the linked user ID, including against other patients in the same tenant. Register/check-in/edit/vitals/float mutations require RECEPTIONIST. Owner cancellation is restricted to a latest-version queued visit.
+
+Check-in creates a dormant account with an undisclosed random, peppered/hashed PIN and unverified contact. Patient login now explicitly rejects unverified contacts; a guessed PIN cannot activate such an account. Activation/WhatsApp delivery is a later-phase ownership-verification flow. Contact edits cannot bypass it. Audits contain actor/resource IDs and action/outcome, never patient bodies, vitals or the cancellation free text. Production access logs must likewise avoid search-query/contact values.
+
+Live subscriptions verify JWT purpose, audience, role, tenant and server-side session. Every emitted notice revalidates authorization; a five-second check also disconnects revoked sessions. Expiry closes the socket. Notices carry no names/contact/vitals; clients refetch permitted HTTP projections.

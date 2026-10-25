@@ -12,9 +12,10 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: "npm run dev",
+    command: "node --import tsx scripts/e2e-dev.ts",
     url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
+    gracefulShutdown: { signal: "SIGTERM", timeout: 10000 },
     timeout: 60000,
   },
 });

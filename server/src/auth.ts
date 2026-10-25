@@ -276,7 +276,12 @@ export class Identity {
       portalPin ? this.pinValue(password) : password,
       hash || dummy,
     );
-    if (!u || !ok || !correctMode) {
+    if (
+      !u ||
+      !ok ||
+      !correctMode ||
+      (u.role === "PATIENT" && !u.contactVerified)
+    ) {
       if (t)
         await this.audit(
           t._id,

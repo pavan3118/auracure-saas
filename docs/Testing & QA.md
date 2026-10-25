@@ -60,3 +60,7 @@ See PHASE1-REVIEW.md for executed commands/counts. Server tests run against a re
 ## Default test runner update
 
 The user authorized an Atlas-independent fallback. Root npm test now provisions a mongodb-memory-server replica set and injects its local URI into the suites. It exercises the same real transaction/index/concurrency behavior, with no Atlas connection. The earlier standalone Docker replica-set results remain historical evidence; the fallback run passed 9 UI and 49 server tests.
+
+## Phase 2 evidence
+
+90 server tests and 14 UI tests pass in the disposable replica-set runner. The additional 31 integration/socket tests cover new role boundaries, cross-tenant access, patient ownership, registration/check-in concurrency, retry rollback, vitals lifecycle and live-event isolation/revocation; 10 unit cases cover exact rupee-to-paise conversion and the approved field contract. Five UI tests cover reception actions and forbidden controls. Two Chromium browser journeys pass against their own isolated application, including live updates between receptionist and owner tabs. Startup/shutdown use explicit process ownership, graceful termination and a detached test MongoDB process so teardown does not kill the database before the supervisor closes it. All artifacts use synthetic data only.

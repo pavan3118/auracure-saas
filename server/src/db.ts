@@ -1,4 +1,14 @@
 import "./config/dns.js";
+import {
+  patientSchema,
+  visitSchema,
+  vitalsSchema,
+  cashSessionSchema,
+  type Patient,
+  type Visit,
+  type Vitals,
+  type CashSession,
+} from "./modules/reception/models.js";
 import mongoose, {
   Schema,
   type Connection,
@@ -42,6 +52,7 @@ export interface Tenant extends Row {
   status: "ACTIVE" | "SUSPENDED";
   ownerId: string;
   governanceVersion: number;
+  queueSequence: number;
 }
 export interface Challenge extends Row {
   purpose: "INVITE" | "RECOVERY" | "OTP";
@@ -78,12 +89,33 @@ export interface Outbox extends Row {
   attempts: number;
   nextAttempt: Date;
 }
+export interface Operation extends Row {
+  actorId: string;
+  operation: string;
+  keyHash: string;
+  requestHash: string;
+  resourceId: string;
+  expiresAt: Date;
+}
 const base = {
   _id: { type: String, default: randomUUID },
   tenant_id: { type: String, required: true, index: true },
 };
 const schema = (fields: Record<string, unknown>) =>
   new Schema({ ...base, ...fields }, { timestamps: true, strict: "throw" });
+const operationSchema = schema({
+  actorId: { type: String, required: true },
+  operation: { type: String, required: true },
+  keyHash: { type: String, required: true },
+  requestHash: { type: String, required: true },
+  resourceId: { type: String, required: true },
+  expiresAt: { type: Date, required: true },
+});
+operationSchema.index(
+  { tenant_id: 1, actorId: 1, operation: 1, keyHash: 1 },
+  { unique: true },
+);
+operationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 const userSchema = schema({
   name: { type: String, required: true },
   login: { type: String, required: true },
@@ -120,6 +152,7 @@ const tenantSchema = schema({
   status: { type: String, default: "ACTIVE" },
   ownerId: { type: String, required: true },
   governanceVersion: { type: Number, default: 0 },
+  queueSequence: { type: Number, default: 0 },
 });
 const challengeSchema = schema({
   purpose: String,
@@ -219,6 +252,31 @@ class Scoped<T extends Row> {
       .lean()
       .exec();
   }
+  list(
+    q: FilterQuery<T>,
+    options: { sort: Record<string, 1 | -1>; limit: number },
+    session?: ClientSession,
+  ) {
+    check(
+      Number.isInteger(options.limit) &&
+        options.limit >= 1 &&
+        options.limit <= 101,
+      500,
+      "INVALID_PAGE_LIMIT",
+    );
+    return this.model
+      .find(this.filter(q), null, { session })
+      .sort(options.sort)
+      .limit(options.limit)
+      .lean()
+      .exec();
+  }
+  count(q: FilterQuery<T>, session?: ClientSession) {
+    return this.model
+      .countDocuments(this.filter(q))
+      .session(session ?? null)
+      .exec();
+  }
   async create(v: Partial<T>, session?: ClientSession) {
     const [d] = await this.model.create([{ ...v, tenant_id: this.tenantId }], {
       session,
@@ -243,6 +301,11 @@ class Scoped<T extends Row> {
   }
 }
 export class Database {
+  private patientsModel;
+  private visitsModel;
+  private vitalsModel;
+  private cashSessionsModel;
+  private operationsModel;
   private usersModel;
   private tenantsModel;
   private challengesModel;
@@ -252,6 +315,17 @@ export class Database {
   private bootstrapModel;
   private rates;
   constructor(public connection: Connection) {
+    this.operationsModel = connection.model<Operation>(
+      "Operation",
+      operationSchema,
+    );
+    this.patientsModel = connection.model<Patient>("Patient", patientSchema);
+    this.visitsModel = connection.model<Visit>("Visit", visitSchema);
+    this.vitalsModel = connection.model<Vitals>("Vitals", vitalsSchema);
+    this.cashSessionsModel = connection.model<CashSession>(
+      "CashSession",
+      cashSessionSchema,
+    );
     this.usersModel = connection.model<User>("User", userSchema);
     this.tenantsModel = connection.model<Tenant>("Tenant", tenantSchema);
     this.challengesModel = connection.model<Challenge>(
@@ -273,6 +347,21 @@ export class Database {
       ),
     );
     this.rates.schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  }
+  patients(t: string) {
+    return new Scoped(this.patientsModel, t);
+  }
+  visits(t: string) {
+    return new Scoped(this.visitsModel, t);
+  }
+  vitals(t: string) {
+    return new Scoped(this.vitalsModel, t);
+  }
+  cashSessions(t: string) {
+    return new Scoped(this.cashSessionsModel, t);
+  }
+  operations(t: string) {
+    return new Scoped(this.operationsModel, t);
   }
   users(t: string) {
     return new Scoped(this.usersModel, t);

@@ -245,7 +245,7 @@ describe("Phase 1 accessible user journeys", () => {
     expect(mocks.api).not.toHaveBeenCalled();
     expect(
       screen.getByText(
-        "Planned for later phases. No patient or clinical activity is available yet.",
+        "Reception is available in the live workspace. Doctor, pharmacy and laboratory workflows follow in later phases.",
       ),
     ).toBeInTheDocument();
   });

@@ -123,3 +123,7 @@ Every detail under an assumption-labelled section is proposed, including its acc
 **ASSUMPTION - needs approval (A21):** Before implementation, approve or amend A01–A21. Before production use, decide jurisdiction/compliance obligations, data residency, consent, record retention/deletion, breach response, clinical safety, accessibility requirements, taxes/currency and vendor suitability. No compliance certification or production readiness is claimed by these drafts.
 
 Decide specifically whether the public verification/login/recovery routes proposed in A04/A20 are approved exceptions to U03. Without those exceptions, unauthenticated contact verification, login and recovery cannot operate. They must never accept a client-supplied tenant_id as authority; verified tenant-bound challenges supply scope.
+
+## Phase 2 approved implementation decisions
+
+The user approved full name, a unique email or international mobile contact, optional birth date, and optional temperature °C, paired systolic/diastolic mmHg, pulse bpm, SpO₂ %, weight kg and height cm. The user selected INR. These decisions resolve the reception field/unit and opening-float currency questions for A03/A12. No diagnostic thresholds, consent language or family-access model is inferred. See PHASE2-REVIEW.md for the implemented scope and deferred Phase 4 reconciliation.

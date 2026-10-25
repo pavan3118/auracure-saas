@@ -1,5 +1,6 @@
 import { spawn, execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import dotenv from "dotenv";
 import { localDatabase } from "./local-db.js";
 execFileSync("node", ["--import", "tsx", "scripts/setup-local.ts"], {
@@ -15,18 +16,25 @@ if (process.argv.includes("--atlas")) {
   if (!uri.pathname || uri.pathname === "/")
     uri.pathname = "/auracare_phase1_dev";
   env.MONGODB_URI = uri.toString();
-} else if (env.MONGODB_URI?.includes("127.0.0.1")) await localDatabase();
+} else if (!process.env.MONGODB_URI && env.MONGODB_URI?.includes("127.0.0.1"))
+  await localDatabase();
 const children = [
-  spawn("npm", ["run", "dev", "-w", "server"], {
+  spawn(process.execPath, ["--import", "tsx", "--watch", "src/index.ts"], {
+    cwd: resolve("server"),
     env,
     stdio: "inherit",
     detached: true,
   }),
-  spawn("npm", ["run", "dev", "-w", "client"], {
-    env,
-    stdio: "inherit",
-    detached: true,
-  }),
+  spawn(
+    process.execPath,
+    [resolve("node_modules/vite/bin/vite.js"), "--host", "0.0.0.0"],
+    {
+      cwd: resolve("client"),
+      env,
+      stdio: "inherit",
+      detached: true,
+    },
+  ),
 ];
 let stopping = false;
 function stop() {

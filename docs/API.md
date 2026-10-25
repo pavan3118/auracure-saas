@@ -90,3 +90,27 @@ Login accepts exactly one of password or portal_pin, together with facility_subd
 `POST /staff/invitations/:id/approve` implements OWNER approval of a pharmacy/lab invitation request. `PATCH /staff/:id` adds mfa_proof to role/status; licence verification requires `{evidence_ref,mfa_proof}`. Invitations use email logins in Phase 1; alternate employee/mobile/licence login formats remain future extensions. Staff, invitations and audit lists return at most 100 rows, newest first; cursor pagination is not yet implemented.
 
 Cookie-authenticated refresh requires an exact matching Origin header. Browser cookie is HttpOnly, SameSite=Lax, auth-path scoped and Secure in production; local HTTP development omits Secure intentionally. Access JWTs stay in browser memory and expire after 15 minutes; the client attempts renewal after 14 minutes. Health responses contain status only; deployment must restrict readiness at its ingress.
+
+## Phase 2 implemented contract
+
+The following approved routes are now implemented in addition to Phase 1. All require full JWT authentication and the Phase 2 permission matrix in PHASE2-REVIEW.md.
+
+| Endpoint | Payload / response |
+| --- | --- |
+| GET /patients | q (literal name/contact search), cursor (UUID), limit (1–50); data={items,next_cursor}; tenant-scoped projections |
+| POST /patients | {name,contact:{type:EMAIL or MOBILE,value},date_of_birth?}; Idempotency-Key required; returns 201 |
+| GET /patients/:id | Reception/operational owner, assigned doctor or linked patient projection |
+| PATCH /patients/:id | {name?,date_of_birth?: YYYY-MM-DD or null,expected_version}; clear optional DOB with null; no contact/tenant writes |
+| POST /visits | {patient_id}; Idempotency-Key; 201 visit with queue_number, state and version |
+| GET /queue | No scope query; {items,queued_count,in_consultation_count,limit}; oldest 100 active tickets; doctors receive no patient names |
+| POST /visits/:id/cancel | {expected_version,reason}; Idempotency-Key; queued visits only |
+| GET /visits/:id/vitals | Reception or assigned doctor; immutable history |
+| POST /visits/:id/vitals | {observations:[{code,value,unit}]}; Idempotency-Key; queued visit only |
+| GET /cash/sessions | Reception own / owner tenant opening floats |
+| POST /cash/sessions | {opening_float:decimal string,currency:INR}; Idempotency-Key; exact integer paise |
+
+Vitals codes/units: TEMPERATURE/°C, SYSTOLIC_BP/mmHg, DIASTOLIC_BP/mmHg, PULSE/bpm, SPO2/%, WEIGHT/kg, HEIGHT/cm. Duplicate codes and unpaired pressure values return 400. Values are finite; physical quantities are nonnegative and percentages are 0–100; no clinical alert thresholds are asserted. Full names are 2–120 characters, email contacts are lowercased, mobile contacts require international +country-code format, and DOB must be a valid non-future calendar date. Shared-contact accounts are not merged.
+
+Socket.io uses its standard /socket.io transport path with auth.token and exact permitted Origin. After authenticated connection, queue.updated contains {visit_id,state,version} only; clients refetch authorized queue data. Client-supplied tenant rooms are not supported. Vite proxies this WebSocket path to the API during local development.
+
+Cash closing/review, payments, clinical claim-next/completion and patient-record portal APIs stay deferred to their approved later phases. Phase 2 records the opening float, not a completed cash ledger.

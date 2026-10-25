@@ -1,3 +1,4 @@
+import { Reception } from "./Reception";
 import { useCallback, useEffect, useState } from "react";
 import {
   Users,
@@ -40,7 +41,9 @@ const roleName = (r: Role) =>
 export function Workspace() {
   const auth = useAuth(),
     me = auth.me!;
-  const [page, setPage] = useState<"overview" | "staff" | "audit">("overview"),
+  const [page, setPage] = useState<
+      "overview" | "staff" | "audit" | "reception"
+    >(me.user.role === "RECEPTIONIST" ? "reception" : "overview"),
     [users, setUsers] = useState<User[]>([]),
     [invites, setInvites] = useState<Invitation[]>([]),
     [events, setEvents] = useState<AuditEvent[]>([]),
@@ -93,6 +96,15 @@ export function Workspace() {
             <LayoutDashboard size={19} />
             Overview
           </button>
+          {["RECEPTIONIST", "OWNER", "DOCTOR"].includes(me.user.role) && (
+            <button
+              className={page === "reception" ? "selected" : ""}
+              onClick={() => setPage("reception")}
+            >
+              <Activity size={19} />
+              {me.user.role === "RECEPTIONIST" ? "Reception" : "Live queue"}
+            </button>
+          )}
           {owner && (
             <>
               <button
@@ -159,6 +171,7 @@ export function Workspace() {
               </button>
             </div>
           )}
+          {page === "reception" && <Reception />}
           {page === "overview" && (
             <>
               <div className="heading-row">
@@ -248,7 +261,7 @@ export function Workspace() {
               <section className="panel">
                 <div className="panel-heading">
                   <h2>Your facility setup</h2>
-                  <span className="badge">Phase 1</span>
+                  <span className="badge">Phase 2</span>
                 </div>
                 <div className="setup-row">
                   <span className="setup-check">✓</span>
@@ -273,8 +286,8 @@ export function Workspace() {
                   <div>
                     <strong>Reception and clinical workflows</strong>
                     <p>
-                      Planned for later phases. No patient or clinical activity
-                      is available yet.
+                      Reception is available in the live workspace. Doctor,
+                      pharmacy and laboratory workflows follow in later phases.
                     </p>
                   </div>
                 </div>
@@ -619,7 +632,7 @@ export function Workspace() {
             )}
           <footer className="workspace-footer">
             AuraCare · Facility workspace
-            <span>Phase 1 — Foundation & onboarding</span>
+            <span>Phase 2 — Reception & patient services</span>
           </footer>
         </main>
       </div>

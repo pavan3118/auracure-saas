@@ -1,6 +1,6 @@
 # AuraCare
 
-Multi-tenant clinic workspace. Phase 1 provides verified facility onboarding, owner TOTP, staff credential lifecycle, tenant-scoped access and Screen 07 staff management. Reception, clinical, inventory, billing and patient-record workflows are later phases.
+Multi-tenant clinic workspace. Phase 1 provides verified onboarding, owner TOTP, staff credentials and tenant isolation. Phase 2 adds patient registration/search, check-in, vitals history, a live queue and INR opening floats. Clinical work, stock, payments and final cash reconciliation remain later phases.
 
 ## Development
 
@@ -27,3 +27,5 @@ The browser test uses the installed Chromium executable; set CHROMIUM_PATH for a
 Atlas is reported verified by the user on their own machine; cloud-side DNS remains unavailable. Uploaded credentials are stored only in ignored local configuration, never repository files. The read-only `npm run check:atlas` command can retry after network access is fixed; `npm run dev:atlas` selects that local binding. Atlas-backed readiness and CodeRabbit review are pending; do not treat this as a production release.
 
 `npm run db:ping` works from either the root or server directory, loads ignored `server/.env` and reports success or a credential-redacted connection error. The private environment file is not included in Git; recreate it through secure configuration on another machine. Run `npm test` to continue Phase 1 independently of Atlas.
+
+See [Phase 2 review](docs/PHASE2-REVIEW.md) for approved fields, test evidence, account activation limits and cash deferrals. Browser tests now provision an isolated replica set and stop their own services; no running development app is reused.

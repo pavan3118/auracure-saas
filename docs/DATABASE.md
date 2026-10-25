@@ -61,3 +61,9 @@ JWT issuance occurs only after successful commit. External messages/payments nev
 ## Data lifecycle — ASSUMPTION - needs approval (A21)
 
 No automatic deletion of clinical, financial or audit records until retention policy is approved. Short-lived challenges and sessions use TTL cleanup. Backups, restore exercises, encryption/key rotation and indexes are deployment gates. Never seed real healthcare records into development or tests. Store PDFs in private object storage, not public URLs or inline MongoDB blobs.
+
+## Phase 2 schema mapping
+
+Implementation uses the existing UUID/string-ID and tenant_id conventions. Patient stores name, normalized searchName, contactType/contactValue, optional dateOfBirth, linked userId (empty until check-in) and version. Unique tenant/contact and partial unique tenant/linked-user indexes prevent accidental account merging. Visits have patientId, optional doctorId, state, monotonic queueNumber, queuedAt, version, durable checkInKey/requestHash and cancellation metadata. A partial unique tenant/patient index allows only one QUEUED/IN_CONSULTATION visit. Tenant.queueSequence advances in the check-in transaction.
+
+Vitals records store the exact approved observation codes/units, visit/patient IDs and recorder ID; they are append-only. CashSession stores receptionistId, openingFloatMinor (integer paise), INR, OPEN state and a durable operation reference; closing/payment movements remain unimplemented. Operation records are tenant/actor/operation/key unique, expire after 24 hours, and store request hashes/resource references rather than raw patient payloads. All resource creation, audit and retry writes are transactionally coupled. Apply additive indexes with the existing db:indexes workflow before serving Phase 2 traffic.
